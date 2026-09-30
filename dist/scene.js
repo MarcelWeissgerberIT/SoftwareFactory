@@ -48,14 +48,15 @@ export function createFactory(canvas,{onSelect,onArtifact,onCameraChange,onReady
   design:returnBelt([[dp.x,dp.z],tangentPoint(2,.95),[dp.x+2.2,dp.z+1.5],[dp.x+1.5,dp.z+4.6],[dp.x-1.15,dp.z+4.1],[dp.x-1.9,dp.z+1.5],tangentPoint(2,-.95),[dp.x,dp.z]],0xccaa69),
   rework:returnBelt([[qp.x,qp.z],tangentPoint(4,.95),[qp.x+1.4,qp.z+2.5],[qp.x-.5,4.5],[bp.x+.4,4.3],[bp.x-1.3,.4],[bp.x-1.5,-2.1],tangentPoint(3,-.95),[bp.x,bp.z]],0xb48d87)
  };
- floorText('DESIGN  ↻',dp.x-.4,2,3,'#ac8a4c');floorText('NACHARBEIT  ↻',6.1,5.6,4,'#a17771');
+ floorText('DESIGN  ↻',dp.x-.4,2,3,'#ac8a4c');floorText('REWORK  ↻',6.1,5.6,4,'#a17771');
  const knowledgePoints=[nodes[5].position.clone(),new THREE.Vector3(14,.055,-7.5),new THREE.Vector3(-7,.055,-7.5),nodes[1].position.clone()];knowledgePoints.forEach(p=>p.y=.06);const knowledgeCurve=new THREE.CatmullRomCurve3(knowledgePoints);const knowledgeLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints(knowledgeCurve.getPoints(120)),new THREE.LineDashedMaterial({color:0x91a9c1,dashSize:.18,gapSize:.22,transparent:true,opacity:.35}));knowledgeLine.computeLineDistances();scene.add(knowledgeLine);
  // Accumulated software artifacts share one carrier as the Auftrag travels.
- function portalTexture(revision=1,feedback=[],buildRevision=1){
+ function portalTexture(revision=1,feedback=[],buildRevision=1,language='de'){
   const c=document.createElement('canvas');c.width=512;c.height=384;const ctx=c.getContext('2d');const accessible=feedback.includes('accessibility'),clarity=feedback.includes('clarity');
-  ctx.fillStyle='#f5faf7';ctx.fillRect(0,0,512,384);ctx.fillStyle='#213847';ctx.fillRect(0,0,512,62);ctx.fillStyle='#fff';ctx.font='bold 25px Arial';ctx.fillText('Kundenportal',27,41);ctx.font='18px Arial';ctx.fillText('v'+revision,445,40);ctx.fillStyle='#3c5652';ctx.font='bold 23px Arial';ctx.fillText('Meine Aufträge',26,112);
-  const statuses=clarity?['In Bearbeitung','In Prüfung','Abgeschlossen']:['PROC','QA','DONE'];statuses.forEach((text,i)=>{const y=151+i*68;ctx.fillStyle=accessible?'#d9e9e0':'#e8ede9';ctx.fillRect(22,y,468,53);ctx.fillStyle=accessible?'#243b45':'#899991';ctx.font=(accessible?'bold 20':'18')+'px Arial';ctx.fillText('Auftrag 0'+(i+1),38,y+32);ctx.fillStyle=accessible?'#245e4a':'#85998e';ctx.fillText(text,260,y+32)});
-  if(buildRevision>1){ctx.fillStyle='#2c7157';ctx.font='14px Arial';ctx.fillText('✓ Leere Listen mit Hinweis',27,378)}
+  const copy=language==='en'?{title:'Customer portal',orders:'My orders',order:'Order',statuses:['In progress','In review','Completed'],empty:'✓ Empty lists include guidance'}:{title:'Kundenportal',orders:'Meine Aufträge',order:'Auftrag',statuses:['In Bearbeitung','In Prüfung','Abgeschlossen'],empty:'✓ Leere Listen mit Hinweis'};
+  ctx.fillStyle='#f5faf7';ctx.fillRect(0,0,512,384);ctx.fillStyle='#213847';ctx.fillRect(0,0,512,62);ctx.fillStyle='#fff';ctx.font='bold 25px Arial';ctx.fillText(copy.title,27,41);ctx.font='18px Arial';ctx.fillText('v'+revision,445,40);ctx.fillStyle='#3c5652';ctx.font='bold 23px Arial';ctx.fillText(copy.orders,26,112);
+  const statuses=clarity?copy.statuses:['PROC','QA','DONE'];statuses.forEach((text,i)=>{const y=151+i*68;ctx.fillStyle=accessible?'#d9e9e0':'#e8ede9';ctx.fillRect(22,y,468,53);ctx.fillStyle=accessible?'#243b45':'#899991';ctx.font=(accessible?'bold 20':'18')+'px Arial';ctx.fillText(copy.order+' 0'+(i+1),38,y+32);ctx.fillStyle=accessible?'#245e4a':'#85998e';ctx.fillText(text,260,y+32)});
+  if(buildRevision>1){ctx.fillStyle='#2c7157';ctx.font='14px Arial';ctx.fillText(copy.empty,27,378)}
   const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;return tex;
  }
  const productTexture=portalTexture();const productFaces=[];
@@ -84,7 +85,8 @@ export function createFactory(canvas,{onSelect,onArtifact,onCameraChange,onReady
   else if(state.cycle!==null&&state.cycle!==undefined){const pose=processPose(state.cycle);hero.group.position.y+=pose.lift;hero.group.rotation.y+=pose.turn}
  }
  function apply(next){Object.assign(state,next);selected=next.selected;runStage=next.runStage;progress=next.progress;phase=next.phase;isMoving=(phase==='running'&&next.cycle===null)||phase==='returning';gate=next.gate;approved=next.approved||[];
-  const key=[next.designRevision,...(next.appliedDesignFeedback||[]),next.buildRevision].join(':');if(key!==textureKey){textureKey=key;const tex=portalTexture(next.designRevision,next.appliedDesignFeedback||[],next.buildRevision);for(const m of productFaces){m.map=tex;m.needsUpdate=true}activeTexture.dispose();activeTexture=tex}
+  const language=state.language==='en'?'en':'de';nodes.forEach(machine=>machine.setLanguage(language));
+  const key=[language,next.designRevision,...(next.appliedDesignFeedback||[]),next.buildRevision].join(':');if(key!==textureKey){textureKey=key;const tex=portalTexture(next.designRevision,next.appliedDesignFeedback||[],next.buildRevision,language);for(const m of productFaces){m.map=tex;m.needsUpdate=true}activeTexture.dispose();activeTexture=tex}
   poseHero();
  }
  let last=0,frame=0,alive=true;

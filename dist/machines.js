@@ -7,6 +7,26 @@ const C = { ivory: '#eef1eb', graphite: '#1b3040', mint: '#52c6a4', blue: '#577d
 const geometries = new Map();
 const materials = new Map();
 const TAU = Math.PI * 2;
+const LABEL_EN = {
+  'KUNDENPORTAL':'CUSTOMER PORTAL',
+  'ZIEL  ·  UMFANG  ·  ERFOLG':'GOAL  ·  SCOPE  ·  SUCCESS',
+  'QUELLEN':'SOURCES',
+  '3 ARBEITSPAKETE':'3 WORK PACKAGES',
+  'FREIGABE':'APPROVAL',
+  'PRÜFUNG':'REVIEW',
+  'ABNAHME':'ACCEPTANCE',
+  'ABGENOMMEN':'ACCEPTED',
+  'WISSEN':'KNOWLEDGE'
+};
+function translatedLabel(text,language){return language==='en'?(LABEL_EN[text]||text.replace(/^VARIANTE /,'VARIANT ')):text;}
+function paintLabel(face,language){
+  const {text,fg,bg,size}=face.userData.label;
+  const canvas=face.material.map.image,ctx=canvas.getContext('2d');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle=fg;ctx.font=`600 ${size}px Arial, sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(translatedLabel(text,language),canvas.width/2,canvas.height/2,472);
+  face.material.map.needsUpdate=true;
+}
 function mat(color, metalness = .12, roughness = .55) {
   const key = `${color}:${metalness}:${roughness}`;
   if (!materials.has(key)) materials.set(key, new THREE.MeshStandardMaterial({ color, metalness, roughness }));
@@ -34,11 +54,9 @@ function sphere(p,r,x,y,z,color) {
 }
 function label(p,text,w,h,x,y,z,fg=C.graphite,bg=C.ivory,size=44) {
   const canvas=document.createElement('canvas'); canvas.width=512; canvas.height=Math.max(64,Math.round(512*h/w));
-  const ctx=canvas.getContext('2d'); ctx.fillStyle=bg; ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle=fg; ctx.font=`600 ${size}px Arial, sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';ctx.fillText(text,256,canvas.height/2,472);
   const texture=new THREE.CanvasTexture(canvas); texture.colorSpace=THREE.SRGBColorSpace; texture.anisotropy=4;
   const surface=new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide,toneMapped:false});
-  const face=mesh(p,new THREE.PlaneGeometry(w,h),surface,x,y,z);face.castShadow=false;return face;
+  const face=mesh(p,new THREE.PlaneGeometry(w,h),surface,x,y,z);face.castShadow=false;face.userData.label={text,fg,bg,size};paintLabel(face,'en');return face;
 }
 function bolt(p,x,y,z) { const b=cylinder(p,.025,.017,x,y,z,C.graphite);b.rotation.x=Math.PI/2;return b; }
 function panel(p,w,h,d,x,y,z,color=C.ivory) {
@@ -348,19 +366,20 @@ function designPlotter(parent){
   const spindle=cylinder(parent,.036,1,0,2.20,0,C.graphite);
   const stylus=new THREE.Group();stylus.name='design-contact-stylus';parent.add(stylus);
   cylinder(stylus,.055,.24,0,.15,0,C.ivory);cylinder(stylus,.026,.05,0,.016,0,C.amber,.012);
-  let shownRevision=-1;
+  let shownKey='';
   function redraw(revision){
-    if(revision===shownRevision)return;shownRevision=revision;
+    const language=parent.userData.language||'en',key=`${language}:${revision}`;
+    if(key===shownKey)return;shownKey=key;
     const ctx=imageCanvas.getContext('2d');ctx.fillStyle='#f0f5ef';ctx.fillRect(0,0,384,240);
     const refined=revision>1;ctx.fillStyle=refined?'#1b3040':'#a4b1af';ctx.fillRect(12,12,360,36);
-    ctx.fillStyle='#ffffff';ctx.font='600 16px Arial';ctx.fillText('Kundenportal',25,36);
+    ctx.fillStyle='#ffffff';ctx.font='600 16px Arial';ctx.fillText(language==='en'?'Customer portal':'Kundenportal',25,36);
     for(let i=0;i<3;i++){
       const yy=65+i*53;ctx.fillStyle=refined?'#e1ebe4':'#e2e6e0';ctx.fillRect(12,yy,360,42);
       ctx.fillStyle=refined?'#577dae':'#a6b2ad';ctx.fillRect(25,yy+12,refined?150:90,7);
       ctx.fillStyle=refined?'#52c6a4':'#efa754';ctx.fillRect(refined?282:230,yy+11,refined?75:125,18);
     }
     texture.needsUpdate=true;
-    const c=caption.material.map.image,context=c.getContext('2d');context.fillStyle=C.ivory;context.fillRect(0,0,c.width,c.height);context.fillStyle=revision?C.mint:C.blue;context.font='600 35px Arial';context.textAlign='center';context.textBaseline='middle';context.fillText(`VARIANTE ${String(revision).padStart(2,'0')}`,c.width/2,c.height/2);caption.material.map.needsUpdate=true;
+    caption.userData.label.text=`VARIANTE ${String(revision).padStart(2,'0')}`;caption.userData.label.fg=revision?C.mint:C.blue;paintLabel(caption,language);
   }
   return process=>{
     redraw(parent.userData.designRevision||1);
@@ -393,11 +412,15 @@ function buildContactTool(parent){
 
 export function createMachine(index,{reverseGate=false}={}){
   if(!Number.isInteger(index)||index<0||index>5)throw new RangeError('Machine index must be 0–5');
-  const group=new THREE.Group();group.userData.reverseGate=reverseGate;group.name=['brief-intake','atlas-context','norda-design-plan','norda-build','quality-acceptance','atlas-knowledge'][index];
+  const group=new THREE.Group();group.userData.reverseGate=reverseGate;group.userData.language='en';group.name=['brief-intake','atlas-context','norda-design-plan','norda-build','quality-acceptance','atlas-knowledge'][index];
   const motion=[intake,atlas,plan,build,quality,knowledge][index](group);
   const cradle=liftCradle(group,index);
   const tool=[intakePress,contextConnector,designPlotter,buildContactTool,null,null][index]?.(group);
   const hitMeshes=[];group.traverse(object=>{if(object.isMesh){object.userData.machineIndex=index;hitMeshes.push(object);}});
+  function setLanguage(language){
+    language=language==='en'?'en':'de';if(group.userData.language===language)return;
+    group.userData.language=language;group.traverse(object=>{if(object.userData.label)paintLabel(object,language);});
+  }
   function animate(time,activity=0,gateOpen=false,process=null){
     group.userData.designRevision=process?.revision||1;
     const resolved=resolvedProcess(process);
@@ -407,5 +430,5 @@ export function createMachine(index,{reverseGate=false}={}){
     group.userData.process=resolved?{cycle:resolved.cycle,lift:resolved.lift,turn:resolved.turn,revision:resolved.revision,mode:resolved.mode||null}:null;
   }
   animate(0,0,false,null);
-  return {group,animate,focusHeight:[1.6,1.7,2.05,1.65,1.85,1.65][index],hitMeshes};
+  return {group,animate,setLanguage,focusHeight:[1.6,1.7,2.05,1.65,1.85,1.65][index],hitMeshes};
 }

@@ -1,12 +1,19 @@
-import { stations } from './data.js';
+import { stations as stationsDE } from './data.js';
+import { stations as stationsEN } from './data-en.js';
+import { getLanguage, setLanguage, t } from './i18n.js';
+import { captureStaticTranslations } from './static-i18n.js';
 import { createFactory } from './scene.js';
 import { createSimulation } from './engine.js';
 import { attachWorkbench } from './workbench.js';
 
+const applyStaticLanguage = captureStaticTranslations();
+let stations = getLanguage() === 'de' ? stationsDE : stationsEN;
+applyStaticLanguage(getLanguage());
+document.documentElement.lang = getLanguage();
 const $ = selector => document.querySelector(selector);
 const simulation = createSimulation();
 const state = simulation.state;
-Object.assign(state, {selected:-1, view:'business', follow:false});
+Object.assign(state, {selected:-1, view:'business', follow:false, language:getLanguage()});
 let factory = null,workbench=null;
 const labels = ['Auftrag','Atlas-Kontext','Design & Plan','Umsetzung','Prüfung','Wissen'];
 const badges = ['BRIEFING','ATLAS','NORDA · DESIGN','NORDA · BUILD','QA + MENSCH','ATLAS'];
@@ -21,7 +28,7 @@ const gateCopy = {
  knowledge:'Zur Übernahme ausgewählt: Statusbegriffe, Zugriffskriterien und Prüfergebnisse. Bestätige diese Auswahl für den simulierten Atlas-Rückfluss.'
 };
 const operations = ['Briefing aufnehmen','Atlas-Quellen verbinden','Entwurf gestalten','Anwendung zusammensetzen','Ergebnis prüfen','Wissen zuordnen'];
-function snapshot(){return {...simulation.snapshot(),station:state.selected<0?null:state.selected+1,stationName:state.selected<0?'Gesamte Factory':stations[state.selected].name,perspective:state.view,runStation:state.runStage+1,pendingDemoGate:state.gate,approvedDemoGates:[...state.approved],demoReviewConfirmed:state.reviewed,cameraFollowsOrder:state.follow,simulationOnly:true,...workbench?.snapshot()}}
+function snapshot(){return {...simulation.snapshot(),station:state.selected<0?null:state.selected+1,stationName:state.selected<0?t('Gesamte Factory'):stations[state.selected].name,perspective:state.view,runStation:state.runStage+1,pendingDemoGate:state.gate,approvedDemoGates:[...state.approved],demoReviewConfirmed:state.reviewed,cameraFollowsOrder:state.follow,simulationOnly:true,...workbench?.snapshot()}}
 function setPerspective(view){if(!['business','engineering'].includes(view))throw new Error('Ungültige Perspektive.');state.view=view;render();return snapshot()}
 function selectStation(index,{pause=true,focus=true}={}){
  if(!Number.isInteger(index)||index<0||index>5)throw new Error('Station muss zwischen 1 und 6 liegen.');
@@ -41,7 +48,7 @@ function setSpeed(speed){simulation.setSpeed(speed);render();return snapshot()}
 function completeGate(gate){simulation.approve(gate);if(state.phase!=='gate')followMotion();render();return snapshot()}
 function requestRework(kind,feedback){simulation.rework(kind,feedback);followMotion();render();return snapshot()}
 function followOrder(){state.follow=!state.follow;factory?.setFollow(state.follow);render();return snapshot()}
-function element(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node}
+function element(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=t(text);return node}
 function portalPreview(compact=false){
  const feedback=state.appliedDesignFeedback||[],clarity=feedback.includes('clarity'),accessible=feedback.includes('accessibility');
  const container=element('div','portal-preview'+(compact?' compact':'')+(accessible?' accessible':''));
@@ -59,8 +66,8 @@ function renderPanel(){
  panel.classList.toggle('waiting',waiting);panel.classList.toggle('design-review',waiting&&state.gate==='design');
  if(state.selected<0)return;
  const s=stations[state.selected],content=s[state.view];
- $('#detail-tool').textContent=s.tool;$('#detail-number').textContent=`STATION ${String(state.selected+1).padStart(2,'0')} / 06`;
- $('#detail-title').textContent=s.name;$('#detail-description').textContent=content.description;$('#detail-output').textContent=content.output;
+ $('#detail-tool').textContent=t(s.tool);$('#detail-number').textContent=t(`STATION ${String(state.selected+1).padStart(2,'0')} / 06`);
+ $('#detail-title').textContent=t(s.name);$('#detail-description').textContent=t(content.description);$('#detail-output').textContent=t(content.output);
  $('#detail-checks').replaceChildren(...content.checks.map(text=>element('li','',text)));
  const gate=$('#gate-box');gate.replaceChildren();
  if(waiting){
@@ -74,15 +81,19 @@ function renderPanel(){
   if(['review','acceptance'].includes(state.gate)){const fixed=state.buildRevision>1;const button=action(fixed?'✓ Leere Listen verbessert':'↻ Leere Listen nachbessern',()=>requestRework('rework','Leere Listen verständlich erklären'),true);button.disabled=fixed;gate.append(button)}
   gate.append(action(gateButton[state.gate],()=>completeGate(state.gate)));
  }else if(s.gate)gate.append(element('strong','',s.gate.title),element('p','',s.gate.copy));
- $('#panel-artifact').textContent=`Kundenportal · Design v${state.designRevision} · Build v${state.buildRevision}`;
+ $('#panel-artifact').textContent=t(`Kundenportal · Design v${state.designRevision} · Build v${state.buildRevision}`);
 }
 function render(){
+ if($('#factory-canvas').hidden)$('.world-hint').textContent=t('3D ist in diesem Browser nicht verfügbar. Stationen unten erkunden.');
+ document.querySelectorAll('[data-language]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.language===getLanguage())));
+ document.querySelectorAll('.scene-label').forEach((b,i)=>{b.querySelector('small').textContent=t(badges[i]);b.querySelector('strong').textContent=t(labels[i]);b.setAttribute('aria-label',`Station ${i+1}: ${stations[i].name}`)});
+ document.querySelectorAll('#stage-nav button').forEach((b,i)=>{b.lastChild.textContent=t(labels[i])});
  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===state.view)));
  document.querySelectorAll('[data-stage]').forEach(b=>{b.setAttribute('aria-pressed',String(+b.dataset.stage===state.selected));b.classList.toggle('done',state.phase==='complete'||state.phase!=='idle'&&+b.dataset.stage<state.runStage)});
  renderPanel();
  const moving=['running','returning'].includes(state.phase);
- $('#play-label').textContent=moving?'Pausieren':state.phase==='paused'?'Weiterfahren':state.phase==='gate'?'Entscheidung ansehen':state.phase==='complete'?'Noch ein Auftrag':'Auftrag starten';
- $('#play-icon').textContent=moving?'Ⅱ':state.phase==='gate'?'◎':'▶';$('#speed-button').textContent=state.speed+'×';$('#speed-button').setAttribute('aria-label',`Geschwindigkeit ${state.speed}-fach. Ändern`);
+ $('#play-label').textContent=t(moving?'Pausieren':state.phase==='paused'?'Weiterfahren':state.phase==='gate'?'Entscheidung ansehen':state.phase==='complete'?'Noch ein Auftrag':'Auftrag starten');
+ $('#play-icon').textContent=t(moving?'Ⅱ':state.phase==='gate'?'◎':'▶');$('#speed-button').textContent=t(state.speed+'×');$('#speed-button').setAttribute('aria-label',t(`Geschwindigkeit ${state.speed}-fach. Ändern`));
  $('#follow-button').setAttribute('aria-pressed',String(state.follow));
  let status='Ein Auftrag. Du steuerst die Verbesserung.';
  if(state.phase==='running')status=`${String(state.runStage+1).padStart(2,'0')} · ${stations[state.runStage].name}`;
@@ -90,8 +101,8 @@ function render(){
  if(state.phase==='paused')status='Auftrag pausiert · Factory frei erkunden';
  if(state.phase==='gate')status=`Deine Entscheidung: ${gateNames[state.gate]}`;
  if(state.phase==='complete')status='Ergebnis abgenommen. Wissen in Atlas bestätigt.';
- $('#run-status').textContent=status;$('#status-dot').style.background=state.phase==='gate'?'#d79b48':'#7baa7c';
- $('#artifact-count').textContent=state.phase==='complete'?'Abgenommen':state.formStage>=2?`Design v${state.designRevision} · Build v${state.buildRevision}`:artifactNames[state.formStage];
+ $('#run-status').textContent=t(status);$('#status-dot').style.background=state.phase==='gate'?'#d79b48':'#7baa7c';
+ $('#artifact-count').textContent=t(state.phase==='complete'?'Abgenommen':state.formStage>=2?`Design v${state.designRevision} · Build v${state.buildRevision}`:artifactNames[state.formStage]);
  $('#experience').classList.toggle('has-order',state.phase!=='idle');
  updateProcess();workbench?.render();if($('#artifact-dialog').open)renderArtifact();
 }
@@ -101,7 +112,7 @@ function updateProcess(){
  if(state.returnRoute){title=state.returnRoute==='design'?'Design-Schleife':'Nacharbeit';detail=state.returnRoute==='design'?`Feedback fährt mit → Entwurf v${state.designRevision+1}`:`Befund fährt mit → Build v${state.buildRevision+1}`;fraction=state.returnProgress}
  else if(state.cycle!==null){fraction=state.cycle;detail=state.cycle<.18?'Greifer dockt am Werkstück an':state.cycle<.38?'Hubtisch hebt den Auftrag an':state.cycle<.68?'Werkzeug bearbeitet das Ergebnis':state.cycle<.88?'Ergebnis wird aufs Band gesetzt':'Werkstück bereit für die Übergabe'}
  if(state.phase==='gate')detail='Wartet auf deine Entscheidung';if(state.phase==='complete'){title='Auftrag abgeschlossen';detail=`Design v${state.designRevision} · Build v${state.buildRevision} · Wissen bestätigt`;fraction=1}
- $('#process-title').textContent=title;$('#process-detail').textContent=detail;$('#process-fill').style.width=`${Math.round(fraction*100)}%`;
+ $('#process-title').textContent=t(title);$('#process-detail').textContent=t(detail);$('#process-fill').style.width=`${Math.round(fraction*100)}%`;
  strip.classList.toggle('is-returning',Boolean(state.returnRoute));workbench?.updateWork();
 }
 function renderArtifact(){
@@ -117,7 +128,7 @@ for(let i=0;i<6;i++){
  const button=element('button','scene-label');button.dataset.sceneStation=i;button.dataset.stage=i;button.setAttribute('aria-label',`Station ${i+1}: ${stations[i].name}`);button.innerHTML=`<span>0${i+1}</span><div><small>${badges[i]}</small><strong>${labels[i]}</strong></div>`;button.onclick=()=>selectStation(i);$('#scene-labels').append(button);
  const nav=element('button');nav.dataset.stage=i;nav.innerHTML=`<span>0${i+1}</span>${labels[i]}`;nav.onclick=()=>selectStation(i);$('#stage-nav').append(nav);
 }
-try{factory=createFactory($('#factory-canvas'),{onFrame:()=>workbench?.drawFrame(),onSelect:i=>selectStation(i),onArtifact:openArtifact,onReady:()=>{$('#loading').hidden=true},onCameraChange:mode=>{state.follow=mode==='follow';$('#follow-button').setAttribute('aria-pressed',String(state.follow))}})}catch(error){console.error('3D factory unavailable',error);$('#factory-canvas').hidden=true;$('#scene-labels').hidden=true;$('.world-fallback').hidden=false;$('#loading').hidden=true;$('.world-hint').textContent='3D ist in diesem Browser nicht verfügbar. Stationen unten erkunden.';factory={positions:[.08,.24,.40,.57,.76,.92],focus(){},overview(){},zoom(){},setFollow(){},apply(){}}}
+try{factory=createFactory($('#factory-canvas'),{onFrame:()=>workbench?.drawFrame(),onSelect:i=>selectStation(i),onArtifact:openArtifact,onReady:()=>{$('#loading').hidden=true},onCameraChange:mode=>{state.follow=mode==='follow';$('#follow-button').setAttribute('aria-pressed',String(state.follow))}})}catch(error){console.error('3D factory unavailable',error);$('#factory-canvas').hidden=true;$('#scene-labels').hidden=true;$('.world-fallback').hidden=false;$('#loading').hidden=true;$('.world-hint').textContent=t('3D ist in diesem Browser nicht verfügbar. Stationen unten erkunden.');factory={positions:[.08,.24,.40,.57,.76,.92],focus(){},overview(){},zoom(){},setFollow(){},apply(){}}}
 let last=0;
 function tick(now){
  const dt=last?Math.min(now-last,100):0;last=now;
@@ -131,6 +142,11 @@ $('#play-button').onclick=play;$('#reset-button').onclick=reset;$('#speed-button
 $('#about-button').onclick=()=>$('#about-dialog').showModal();$('#mobile-about').onclick=()=>$('#about-dialog').showModal();document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.close).close());document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setPerspective(b.dataset.view));
 document.querySelectorAll('#stage-nav button').forEach((b,i)=>b.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const j=e.key==='Home'?0:e.key==='End'?5:(i+(e.key==='ArrowRight'?1:5))%6;selectStation(j);document.querySelectorAll('#stage-nav button')[j].focus()}}));render();
 workbench=attachWorkbench({state,simulation,reset,play,approve:completeGate,rework:requestRework,openArtifact,selectStation,refresh:render});
+document.querySelectorAll('[data-language]').forEach(button=>button.onclick=()=>{
+ setLanguage(button.dataset.language);state.language=getLanguage();stations=getLanguage()==='de'?stationsDE:stationsEN;
+ document.documentElement.lang=getLanguage();applyStaticLanguage(getLanguage());
+ dispatchEvent(new CustomEvent('langchange',{detail:{language:getLanguage()}}));render();
+});
 const context=document.modelContext;
 if(context?.registerTool){const lifecycle=new AbortController();const definitions=[
  {name:'record_factory_demo',description:'Startet eine lokale Videoaufnahme der Demo oder beendet sie. guided startet einen geführten Beispielauftrag mit simulierten Feedbackentscheidungen; es werden keine Daten hochgeladen.',inputSchema:{type:'object',properties:{action:{type:'string',enum:['guided','start','stop']}},required:['action'],additionalProperties:false},execute:async input=>{if(!input||!['guided','start','stop'].includes(input.action))throw new Error('Ungültige Aufnahmeaktion.');await workbench.record(input.action);return snapshot()}},

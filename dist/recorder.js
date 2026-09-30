@@ -9,7 +9,10 @@ const MIME_CANDIDATES=[
   'video/mp4;codecs=avc1.42E01E',
   'video/mp4'
 ];
-const PHASE_LABELS={idle:'Bereit',running:'In Bearbeitung',processing:'In Bearbeitung',paused:'Pausiert',gate:'Entscheidung erforderlich',complete:'Abgeschlossen',returning:'Überarbeitung',rework:'Überarbeitung'};
+const PHASE_LABELS={
+ de:{idle:'Bereit',running:'In Bearbeitung',processing:'In Bearbeitung',paused:'Pausiert',gate:'Entscheidung erforderlich',complete:'Abgeschlossen',returning:'Überarbeitung',rework:'Überarbeitung'},
+ en:{idle:'Ready',running:'In progress',processing:'In progress',paused:'Paused',gate:'Decision required',complete:'Complete',returning:'Revision in progress',rework:'Revision in progress'}
+};
 
 function cleanText(value,fallback=''){
   return typeof value==='string'||typeof value==='number'?String(value).replace(/\s+/g,' ').trim():fallback;
@@ -36,7 +39,7 @@ function textLines(ctx,text,width,maxLines=2){
   }
   if(current&&lines.length<maxLines)lines.push(ellipsis(ctx,current,width));return lines;
 }
-function errorMessage(error){return cleanText(error?.message)||'Die Aufnahme konnte nicht erstellt werden.';}
+function errorMessage(error,language='en'){return cleanText(error?.message)||(language==='de'?'Die Aufnahme konnte nicht erstellt werden.':'The recording could not be created.');}
 
 /**
  * API:
@@ -51,7 +54,7 @@ function errorMessage(error){return cleanText(error?.message)||'Die Aufnahme kon
  */
 export function createRecorder({sourceCanvas,getFrameInfo=()=>({}),onState,onFinish}={}){
   const canvas=document.createElement('canvas');canvas.width=WIDTH;canvas.height=HEIGHT;
-  canvas.setAttribute('aria-label','Live-Vorschau der Software-Factory-Aufnahme');
+  canvas.setAttribute('aria-label','Live preview of the Software Factory recording');
   canvas.style.width='100%';canvas.style.height='auto';canvas.style.aspectRatio='16 / 9';
   const ctx=canvas.getContext('2d',{alpha:false});
   const candidates=typeof MediaRecorder==='function'?MIME_CANDIDATES.filter(type=>{
@@ -60,6 +63,8 @@ export function createRecorder({sourceCanvas,getFrameInfo=()=>({}),onState,onFin
   const supported=Boolean(ctx&&sourceCanvas&&typeof canvas.captureStream==='function'&&typeof MediaRecorder==='function'&&candidates.length);
   const urls=new Set();let disposed=false,session=null,status='idle',lastDuration=0,lastDraw=-Infinity,drawError=null,selectedMime=candidates[0]||'';
   const now=()=>performance.now();
+  const language=()=>{try{return getFrameInfo?.()?.language==='de'?'de':'en';}catch{return 'en';}};
+  const localized=(de,en)=>language()==='de'?de:en;
   const duration=()=>session&&!session.finished?Math.max(0,((session.stoppedAt??now())-session.startedAt)/1000):lastDuration;
   function call(callback,value){try{callback?.(value);}catch(error){console.error('Factory recording callback failed',error);}}
   function emit(next,error){status=next;if(!disposed)call(onState,{status:next,duration:duration(),...(error?{error}:{})});}
@@ -76,6 +81,8 @@ export function createRecorder({sourceCanvas,getFrameInfo=()=>({}),onState,onFin
   function renderComposite(){
     if(!ctx||disposed)return;
     let info={};try{info=getFrameInfo?.()||{};}catch(error){console.error('Factory recording metadata unavailable',error);}
+    const lang=info.language==='de'?'de':'en',german=lang==='de';
+    canvas.setAttribute('aria-label',german?'Live-Vorschau der Software-Factory-Aufnahme':'Live preview of the Software Factory recording');
     ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
     ctx.fillStyle='#edf2ef';ctx.fillRect(0,0,WIDTH,HEIGHT);
     ctx.fillStyle='#fbfcf8';ctx.fillRect(0,0,WIDTH,64);
@@ -99,18 +106,18 @@ export function createRecorder({sourceCanvas,getFrameInfo=()=>({}),onState,onFin
 
     ctx.fillStyle='#fbfcf8';ctx.fillRect(0,673,WIDTH,HEIGHT-673);
     ctx.fillStyle='#dbe5de';ctx.fillRect(36,672,WIDTH-72,1);
-    const phase=PHASE_LABELS[info.phase]||cleanText(info.phase,'Interaktive Demo');
+    const phase=PHASE_LABELS[lang][info.phase]||cleanText(info.phase,german?'Interaktive Demo':'Interactive demo');
     ctx.fillStyle=info.phase==='gate'||info.phase==='paused'?'#d8983e':'#46a484';ctx.beginPath();ctx.arc(42,702,5,0,Math.PI*2);ctx.fill();
     ctx.font='600 15px Arial, sans-serif';ctx.fillStyle='#587568';
     ctx.fillText(ellipsis(ctx,`${stationLabel(info.station)}  ·  ${phase}`,WIDTH-90),58,708);
-    const title=cleanText(info.title)||cleanText(info.operation)||'Vom Auftrag zur überprüften Anwendung.';
+    const title=cleanText(info.title)||cleanText(info.operation)||(german?'Vom Auftrag zur überprüften Anwendung.':'From an order to a reviewed application.');
     ctx.font='600 31px Arial, sans-serif';ctx.fillStyle='#1b3040';ctx.fillText(ellipsis(ctx,title,WIDTH-72),36,750);
-    const detail=cleanText(info.detail)||'Atlas liefert den Kontext. Norda koordiniert die Arbeit. Menschen entscheiden über das Ergebnis.';
+    const detail=cleanText(info.detail)||(german?'Atlas liefert den Kontext. Norda koordiniert die Arbeit. Menschen entscheiden über das Ergebnis.':'Atlas provides context. Norda coordinates the work. People decide on the outcome.');
     ctx.font='400 24px Arial, sans-serif';ctx.fillStyle='#4b645c';textLines(ctx,detail,WIDTH-72,2).forEach((line,i)=>ctx.fillText(line,36,790+i*31));
     ctx.font='600 15px Arial, sans-serif';ctx.fillStyle='#628475';
     const design=Math.max(1,Number(info.designRevision)||1),build=Math.max(1,Number(info.buildRevision)||1);
     ctx.fillText(`DESIGN v${design}    ·    BUILD v${build}`,36,871);
-    ctx.textAlign='right';ctx.font='400 14px Arial, sans-serif';ctx.fillStyle='#84948b';ctx.fillText('Workflow-Simulation · Keine produktiven Systeme',WIDTH-36,871);
+    ctx.textAlign='right';ctx.font='400 14px Arial, sans-serif';ctx.fillStyle='#84948b';ctx.fillText(german?'Workflow-Simulation · Keine produktiven Systeme':'Workflow simulation · No production systems',WIDTH-36,871);
     ctx.restore();
   }
   function failActive(message){
@@ -123,7 +130,7 @@ export function createRecorder({sourceCanvas,getFrameInfo=()=>({}),onState,onFin
     if(disposed||!ctx)return;
     const tick=now(),interval=status==='recording'?1000/FPS:100;
     if(tick-lastDraw<interval-.5)return;lastDraw=tick;
-    try{renderComposite();drawError=null;}catch(error){drawError=errorMessage(error);failActive(drawError);}
+    try{renderComposite();drawError=null;}catch(error){drawError=errorMessage(error,language());failActive(drawError);}
   }
   async function finish(active){
     if(active.finished)return;active.finished=true;active.stoppedAt??=now();
@@ -135,14 +142,14 @@ export function createRecorder({sourceCanvas,getFrameInfo=()=>({}),onState,onFin
     if(blob.size&&mime.includes('webm')){emit('stopping');try{blob=await fixWebmDuration(blob,lastDuration*1000,{logger:false})}catch{}}
     if(session===active)session=null;
     if(disposed){active.resolve(null);return;}
-    if(!blob.size){emit('error','Die Aufnahme enthält keine Videodaten. Starte einen neuen Durchlauf und lasse ihn kurz laufen.');active.resolve(null);return;}
-    let url;try{url=URL.createObjectURL(blob);urls.add(url);}catch(error){emit('error',errorMessage(error));active.resolve(null);return;}
+    if(!blob.size){emit('error',localized('Die Aufnahme enthält keine Videodaten. Starte einen neuen Durchlauf und lasse ihn kurz laufen.','The recording contains no video data. Start a new run and let it play briefly.'));active.resolve(null);return;}
+    let url;try{url=URL.createObjectURL(blob);urls.add(url);}catch(error){emit('error',errorMessage(error,language()));active.resolve(null);return;}
     const result={blob,url,extension:mime.includes('mp4')?'mp4':'webm',duration:lastDuration};
     emit('idle');call(onFinish,result);active.resolve(result);
   }
   function start(){
     if(disposed||session)return false;
-    if(!supported){emit('error','Dieser Browser unterstützt die lokale Canvas-Videoaufnahme nicht.');return false;}
+    if(!supported){emit('error',localized('Dieser Browser unterstützt die lokale Canvas-Videoaufnahme nicht.','This browser does not support local canvas video recording.'));return false;}
     let stream,recorder,setupError;
     try{
       // Preview normally already exists because the owner calls drawFrame after
@@ -153,20 +160,20 @@ export function createRecorder({sourceCanvas,getFrameInfo=()=>({}),onState,onFin
       for(const mimeType of candidates){
         try{recorder=new MediaRecorder(stream,{mimeType,videoBitsPerSecond:6500000});selectedMime=mimeType;break;}catch(error){setupError=error;}
       }
-      if(!recorder)throw setupError||new Error('Kein unterstütztes Videoformat verfügbar.');
+      if(!recorder)throw setupError||new Error(localized('Kein unterstütztes Videoformat verfügbar.','No supported video format is available.'));
       let resolve;const promise=new Promise(done=>resolve=done);
       const active={recorder,stream,startedAt:now(),stoppedAt:null,chunks:[],promise,resolve,finished:false,error:null,timer:null,timeout:null};
       session=active;lastDuration=0;
       recorder.ondataavailable=event=>{if(!active.finished&&event.data?.size)active.chunks.push(event.data);};
       recorder.onstop=()=>finish(active);
-      recorder.onerror=event=>failActive(errorMessage(event.error||event));
+      recorder.onerror=event=>failActive(errorMessage(event.error||event,language()));
       recorder.start(1000);emit('recording');
       active.timer=setInterval(()=>{if(!active.finished&&status==='recording')emit('recording');},500);
       return true;
     }catch(error){
       stopTracks(stream);
       if(session){cleanup(session);session.finished=true;session.resolve(null);session=null;}
-      emit('error',errorMessage(error));return false;
+      emit('error',errorMessage(error,language()));return false;
     }
   }
   function stop(){
@@ -177,8 +184,8 @@ export function createRecorder({sourceCanvas,getFrameInfo=()=>({}),onState,onFin
       if(active.recorder.state!=='inactive')active.recorder.stop();
       // The final dataavailable event is delivered before onstop. Give it time
       // to flush; repeated stop calls share this same promise.
-      active.timeout=setTimeout(()=>{active.error||='Die Aufnahme konnte nicht abgeschlossen werden. Bitte erneut versuchen.';finish(active);},10000);
-    }catch(error){active.error=errorMessage(error);finish(active);}
+      active.timeout=setTimeout(()=>{active.error||=localized('Die Aufnahme konnte nicht abgeschlossen werden. Bitte erneut versuchen.','The recording could not be finalized. Please try again.');finish(active);},10000);
+    }catch(error){active.error=errorMessage(error,language());finish(active);}
     return active.promise;
   }
   function dispose(){

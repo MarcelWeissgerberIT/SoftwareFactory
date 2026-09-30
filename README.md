@@ -1,6 +1,6 @@
 # Atlas × Norda — Software Factory
 
-An interactive, German-language 3D explanation of a software workflow for business and engineering audiences.
+An interactive, bilingual 3D explanation of a software workflow for business and engineering audiences.
 
 **Website:** https://marcelweissgerberit.github.io/SoftwareFactory/
 
@@ -8,9 +8,10 @@ An interactive, German-language 3D explanation of a software workflow for busine
 
 An example customer-portal order moves through six stations: briefing, Atlas context, design and planning, implementation, quality review and acceptance, and knowledge transfer. Machines clamp, lift, process and release the same carrier. Design feedback sends it through a physical return conveyor; quality findings send it back to implementation. Changed builds require another review and a separate acceptance.
 
-- **Auftragsakte:** fictional customer brief, scope, success criteria, knowledge sources, work packages, current result and iteration history.
-- **So arbeitet es:** current input, responsible tool/role, concrete work step, expected output and activity log. Business and Engineering descriptions follow the actual work location, independently of the camera.
-- **Demo film:** the complete 94-second guided example is available in the Recording dialog as a downloadable MP4.
+- **EN / DE:** English is the default. Switching language updates the entire experience, including machine labels, decisions, live work, recording overlays and the demo film; the selection is saved locally.
+- **Order file / Auftragsakte:** fictional customer brief, scope, success criteria, knowledge sources, work packages, current result and iteration history.
+- **How it works / So arbeitet es:** current input, responsible tool/role, concrete work step, expected output and activity log. Business and Engineering descriptions follow the actual work location, independently of the camera.
+- **Demo film:** the complete 94-second guided example is available in the Recording dialog as a downloadable MP4 in English and German.
 - **Recording:** record the current scene or a complete guided demo, preview the result, and download it locally. Captures the 3D scene with readable stage, work and revision overlays at 1600 × 900. No microphone or screen-sharing prompt. The browser selects supported WebM or MP4 encoding.
 - **Guided demo:** demonstrates both design improvements, a QA return loop, and all separate decisions. The banner distinguishes automatic demonstration decisions from manual interaction.
 - Camera orbit, zoom, overview, follow mode, pause/reset and 1×/2×/4× speed.
@@ -40,7 +41,8 @@ node scripts/validate.mjs
 
 - `dist/engine.js`: deterministic state machine, human gates, feedback, delayed revisions and return routes.
 - `dist/scene.js` and `dist/machines.js`: real-time conveyor, synchronized machine contact, carrier forms and camera.
-- `dist/order-details.js`: fictional example and state-dependent explanations.
+- `dist/i18n.js` and `dist/static-i18n.js`: language selection and interface translations.
+- `dist/order-details.js` and `dist/order-details-en.js`: fictional example and state-dependent explanations.
 - `dist/workbench.js`: order dossier, live work view, guided tour and recording controls.
 - `dist/recorder.js`: browser-local video compositing, encoding, preview URLs and lifecycle cleanup.
 - `dist/vendor/`: vendored Three.js 0.186.0 and helpers; its license is included.
