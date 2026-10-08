@@ -86,14 +86,14 @@ export function createRecorder({sourceCanvas,getFrameInfo=()=>({}),onState,onFin
     ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
     ctx.fillStyle='#edf2ef';ctx.fillRect(0,0,WIDTH,HEIGHT);
     ctx.fillStyle='#fbfcf8';ctx.fillRect(0,0,WIDTH,64);
-    ctx.fillStyle='#1b3040';ctx.font='700 24px Arial, sans-serif';ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText('ATLAS × NORDA',36,41);
+    ctx.fillStyle='#1b3040';ctx.font='700 24px Arial, sans-serif';ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText('ATLAS × ONE',36,41);
     ctx.fillStyle='#71958a';ctx.fillRect(251,24,2,21);
     ctx.fillStyle='#62776f';ctx.font='500 17px Arial, sans-serif';ctx.fillText('SOFTWARE FACTORY',276,39);
     ctx.textAlign='right';ctx.font='600 17px Arial, sans-serif';ctx.fillStyle='#466155';ctx.fillText(`DEMO  ·  ${timeLabel(duration())}`,WIDTH-36,40);ctx.textAlign='left';
     ctx.fillStyle='#dbe5de';ctx.fillRect(0,63,WIDTH,1);
 
     // Contain the whole source image. Side bars use the same quiet stage colour.
-    const view={x:26,y:77,w:1548,h:574};
+    const view={x:26,y:77,w:1030,h:574};
     ctx.fillStyle='#e7eeea';roundedRect(ctx,view.x,view.y,view.w,view.h,18);ctx.fill();
     const sourceWidth=sourceCanvas?.width||sourceCanvas?.videoWidth||0;
     const sourceHeight=sourceCanvas?.height||sourceCanvas?.videoHeight||0;
@@ -104,6 +104,28 @@ export function createRecorder({sourceCanvas,getFrameInfo=()=>({}),onState,onFin
       ctx.drawImage(sourceCanvas,view.x+(view.w-w)/2,view.y+(view.h-h)/2,w,h);ctx.restore();
     }
 
+    // The recording uses the same evidence model as the live order and the 3D workpiece.
+    const evidence=info.evidence;
+    if(evidence){
+      const x=1076,w=498;ctx.fillStyle='#fbfcf8';roundedRect(ctx,x,77,w,574,18);ctx.fill();
+      ctx.fillStyle='#587568';ctx.font='600 13px Arial';ctx.fillText(german?'DEMO-DATEN · NORDHAFEN SERVICE':'DEMO DATA · NORDHAFEN SERVICE',x+22,106);
+      ctx.fillStyle='#1b3040';ctx.font='600 23px Arial';ctx.fillText(german?'Vorher → Aktueller Stand':'Before → Current result',x+22,137);
+      ctx.fillStyle='#587568';ctx.font='14px Arial';ctx.fillText('ATLAS · TC-DEMO-01 · Terminology Constraint',x+22,163);
+      evidence.rows.forEach((row,i)=>{
+        const y=185+i*88;ctx.fillStyle='#edf2ee';roundedRect(ctx,x+16,y,w-32,79,8);ctx.fill();
+        ctx.fillStyle='#425c52';ctx.font='14px Arial';ctx.fillText(ellipsis(ctx,row.reference+' · '+row.title,w-66),x+28,y+19);
+        ctx.fillStyle='#697b73';ctx.font='17px Arial';ctx.fillText(row.before+'  →',x+28,y+45);
+        ctx.fillStyle=evidence.accessibilityApplied?'#245e4a':'#70897d';ctx.font=(evidence.accessibilityApplied?'700 20':'400 17')+'px Arial';ctx.fillText(row.current,x+135,y+45);
+        ctx.fillStyle=evidence.clarityApplied?'#245e4a':'#926324';ctx.font='12px Arial';ctx.fillText(ellipsis(ctx,(evidence.clarityApplied?(german?'✓ Atlas-Regel angewandt':'✓ Atlas rule applied'):(german?'Atlas-Ziel: ':'Atlas target: ')+row.target),w-56),x+28,y+66);
+      });
+      ctx.fillStyle='#1b3040';ctx.font='600 14px Arial';ctx.fillText('ATLAS · DC-DEMO-01 · Design Constraint',x+22,471);
+      ctx.fillStyle=evidence.accessibilityApplied?'#245e4a':'#926324';ctx.font='15px Arial';ctx.fillText(evidence.accessibilityApplied?(german?'✓ Lesbare Schrift · Kontrast · Text + Farbe':'✓ Readable type · contrast · text + colour'):(german?'Offen: Lesbarkeit und Kontrast verbessern':'Open: improve readability and contrast'),x+22,496);
+      ctx.fillStyle='#1b3040';ctx.font='600 14px Arial';ctx.fillText('ATLAS · EC-DEMO-01 · Empty-state Constraint',x+22,531);
+      ctx.fillStyle='#587568';ctx.font='13px Arial';ctx.fillText('C-309 · '+(german?'0 Aufträge':'0 orders'),x+22,553);
+      ctx.fillStyle=evidence.emptyStateApplied?'#245e4a':'#926324';ctx.font='16px Arial';textLines(ctx,evidence.emptyState.current||(german?'Kein Hinweis · noch zu verbessern':'No message · improvement pending'),w-44,2).forEach((line,i)=>ctx.fillText(line,x+22,577+i*23));
+      ctx.fillStyle='#587568';ctx.font='12px Arial';ctx.fillText(german?'Atlas-Regeln → ONE-Auftrag → Coding Agent → Prüfung':'Atlas rules → ONE task → coding agent → review',x+22,631);
+    }
+
     ctx.fillStyle='#fbfcf8';ctx.fillRect(0,673,WIDTH,HEIGHT-673);
     ctx.fillStyle='#dbe5de';ctx.fillRect(36,672,WIDTH-72,1);
     const phase=PHASE_LABELS[lang][info.phase]||cleanText(info.phase,german?'Interaktive Demo':'Interactive demo');
@@ -112,7 +134,7 @@ export function createRecorder({sourceCanvas,getFrameInfo=()=>({}),onState,onFin
     ctx.fillText(ellipsis(ctx,`${stationLabel(info.station)}  ·  ${phase}`,WIDTH-90),58,708);
     const title=cleanText(info.title)||cleanText(info.operation)||(german?'Vom Auftrag zur überprüften Anwendung.':'From an order to a reviewed application.');
     ctx.font='600 31px Arial, sans-serif';ctx.fillStyle='#1b3040';ctx.fillText(ellipsis(ctx,title,WIDTH-72),36,750);
-    const detail=cleanText(info.detail)||(german?'Atlas liefert den Kontext. Norda koordiniert die Arbeit. Menschen entscheiden über das Ergebnis.':'Atlas provides context. Norda coordinates the work. People decide on the outcome.');
+    const detail=cleanText(info.detail)||(german?'Atlas liefert den Kontext. ONE verbindet Aufgaben und Coding Agents. Menschen entscheiden über das Ergebnis.':'Atlas provides context. ONE connects tasks and coding agents. People decide on the outcome.');
     ctx.font='400 24px Arial, sans-serif';ctx.fillStyle='#4b645c';textLines(ctx,detail,WIDTH-72,2).forEach((line,i)=>ctx.fillText(line,36,790+i*31));
     ctx.font='600 15px Arial, sans-serif';ctx.fillStyle='#628475';
     const design=Math.max(1,Number(info.designRevision)||1),build=Math.max(1,Number(info.buildRevision)||1);

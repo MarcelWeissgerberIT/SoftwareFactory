@@ -1,0 +1,11 @@
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
+const desktop=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const iconset=path.join(desktop,'build','factory.iconset');
+await fs.mkdir(iconset,{recursive:true});
+execFileSync('/usr/bin/xcrun',['swift',path.join(desktop,'scripts','draw-icon.swift'),iconset],{stdio:'inherit'});
+execFileSync('/usr/bin/iconutil',['-c','icns',iconset,'-o',path.join(desktop,'assets','factory.icns')],{stdio:'inherit'});
+await fs.copyFile(path.join(iconset,'icon_512x512@2x.png'),path.join(desktop,'assets','icon.png'));
+console.log('Generated desktop/assets/factory.icns');

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { getDemoEvidence } from './demo-evidence.js';
 import { OrbitControls } from './vendor/OrbitControls.js';
 import { RoundedBoxGeometry } from './vendor/RoundedBoxGeometry.js';
 import { createMachine, processPose } from './machines.js';
@@ -20,7 +21,7 @@ export function createFactory(canvas,{onSelect,onArtifact,onCameraChange,onReady
  const ground=new THREE.Mesh(new THREE.PlaneGeometry(300,300),new THREE.MeshStandardMaterial({color:0xeff2f2,roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-.74;ground.receiveShadow=true;scene.add(ground);
  const foundation=box(39,.65,21,0xdfe6e5,0,-.4,1,.3);scene.add(foundation);const top=box(38.8,.16,20.8,0xf5f5ed,0,-.06,1,.12);scene.add(top);
  const grid=new THREE.GridHelper(38,38,0xd7dfda,0xe8ece6);grid.position.set(0,.029,1);grid.material.transparent=true;grid.material.opacity=.6;scene.add(grid);
- floorText('SOFTWARE  FACTORY',-11,-7.8,8,'#b4bfba');floorText('ATLAS   ×   NORDA',11,8.9,6,'#a7b6b0');
+ floorText('SOFTWARE  FACTORY',-11,-7.8,8,'#b4bfba');floorText('ATLAS   ×   ONE',11,8.9,6,'#a7b6b0');
  for(const x of[-18.5,18.5])for(const z of[-8.5,10.5]){const bolt=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.025,12),mat(0x9faeaa,.7));bolt.position.set(x,.035,z);scene.add(bolt)}
  const vector=(x,z)=>new THREE.Vector3(x,1.06,z);
  const curve=new THREE.CatmullRomCurve3([vector(-18,6),vector(-13,6),vector(-10,6),vector(-7,3),vector(-7,0),vector(-4,-3.8),vector(0,-3.8),vector(3,-3.8),vector(6,-2),vector(8,.3),vector(12,.3),vector(17,.3)],false,'catmullrom',.4);
@@ -53,10 +54,11 @@ export function createFactory(canvas,{onSelect,onArtifact,onCameraChange,onReady
  // Accumulated software artifacts share one carrier as the Auftrag travels.
  function portalTexture(revision=1,feedback=[],buildRevision=1,language='de'){
   const c=document.createElement('canvas');c.width=512;c.height=384;const ctx=c.getContext('2d');const accessible=feedback.includes('accessibility'),clarity=feedback.includes('clarity');
-  const copy=language==='en'?{title:'Customer portal',orders:'My orders',order:'Order',statuses:['In progress','In review','Completed'],empty:'✓ Empty lists include guidance'}:{title:'Kundenportal',orders:'Meine Aufträge',order:'Auftrag',statuses:['In Bearbeitung','In Prüfung','Abgeschlossen'],empty:'✓ Leere Listen mit Hinweis'};
-  ctx.fillStyle='#f5faf7';ctx.fillRect(0,0,512,384);ctx.fillStyle='#213847';ctx.fillRect(0,0,512,62);ctx.fillStyle='#fff';ctx.font='bold 25px Arial';ctx.fillText(copy.title,27,41);ctx.font='18px Arial';ctx.fillText('v'+revision,445,40);ctx.fillStyle='#3c5652';ctx.font='bold 23px Arial';ctx.fillText(copy.orders,26,112);
-  const statuses=clarity?copy.statuses:['PROC','QA','DONE'];statuses.forEach((text,i)=>{const y=151+i*68;ctx.fillStyle=accessible?'#d9e9e0':'#e8ede9';ctx.fillRect(22,y,468,53);ctx.fillStyle=accessible?'#243b45':'#899991';ctx.font=(accessible?'bold 20':'18')+'px Arial';ctx.fillText(copy.order+' 0'+(i+1),38,y+32);ctx.fillStyle=accessible?'#245e4a':'#85998e';ctx.fillText(text,260,y+32)});
-  if(buildRevision>1){ctx.fillStyle='#2c7157';ctx.font='14px Arial';ctx.fillText(copy.empty,27,378)}
+  const evidence=getDemoEvidence({designRevision:revision,buildRevision,appliedDesignFeedback:feedback},language);
+  ctx.fillStyle='#f5faf7';ctx.fillRect(0,0,512,384);ctx.fillStyle='#213847';ctx.fillRect(0,0,512,62);ctx.fillStyle='#fff';ctx.font='bold 25px Arial';ctx.fillText('Nordhafen · Service',24,39);ctx.font='18px Arial';ctx.fillText('v'+revision,455,39);
+  ctx.fillStyle='#3c5652';ctx.font='bold 16px Arial';ctx.fillText('ATLAS · TC-DEMO-01 / DC-DEMO-01',24,91);
+  evidence.rows.forEach((row,i)=>{const y=109+i*77;ctx.fillStyle=accessible?'#d9e9e0':'#e8ede9';ctx.fillRect(20,y,472,69);ctx.fillStyle='#3c5652';ctx.font='14px Arial';ctx.fillText(row.reference+' · '+row.title,30,y+22);ctx.fillStyle=accessible?'#245e4a':'#85998e';ctx.font=(accessible?'bold 23':'18')+'px Arial';ctx.fillText(row.current,30,y+51)});
+  ctx.fillStyle='#2c7157';ctx.font='14px Arial';ctx.fillText(buildRevision>1?'EC-DEMO-01 · '+evidence.emptyState.current:'EC-DEMO-01 · '+evidence.emptyState.before,24,371);
   const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;return tex;
  }
  const productTexture=portalTexture();const productFaces=[];

@@ -1,6 +1,7 @@
 import * as orderDE from './order-details.js';
 import * as orderEN from './order-details-en.js';
 import { getLanguage, t } from './i18n.js';
+import { getDemoEvidence, renderDemoEvidence } from './demo-evidence.js';
 import { createRecorder } from './recorder.js';
 const $=selector=>document.querySelector(selector);
 const tr=(de,en)=>getLanguage()==='de'?de:en;
@@ -12,7 +13,7 @@ export function attachWorkbench({state,simulation,reset,play,approve,rework,open
  let tour={active:false,record:false,key:'',age:0};
  const recorder=createRecorder({
   sourceCanvas:$('#factory-canvas'),
-  getFrameInfo:()=>{const work=currentOrder().describeWork(state,state.view);return {language:getLanguage(),title:work.title,detail:`${work.tool} · ${work.action}`,station:state.runStage+1,phase:state.phase,designRevision:state.designRevision,buildRevision:state.buildRevision}},
+  getFrameInfo:()=>{const work=currentOrder().describeWork(state,state.view);return {evidence:getDemoEvidence(state,getLanguage()),language:getLanguage(),title:work.title,detail:`${work.tool} · ${work.action}`,station:state.runStage+1,phase:state.phase,designRevision:state.designRevision,buildRevision:state.buildRevision}},
   onState:next=>{recordState=next;renderRecording();if(next.error&&$('#record-dialog').open===false)$('#record-dialog').showModal()},
   onFinish:result=>{lastRecording=result;$('#record-result').hidden=false;$('#record-preview').src=result.url;$('#record-download').href=result.url;$('#record-download').download=`software-factory-SF-001-${new Date().toISOString().replace(/[:.]/g,'-')}.${result.extension}`;renderRecording();if(!$('#record-dialog').open)$('#record-dialog').showModal()}
  });
@@ -47,7 +48,7 @@ export function attachWorkbench({state,simulation,reset,play,approve,rework,open
   if(!tour.active||hidden||state.phase==='paused')return;
   const key=[state.phase,state.gate,state.designRevision,state.buildRevision].join(':');if(key!==tour.key){tour.key=key;tour.age=0}
   if(state.phase==='gate'){
-   tour.age+=dt;if(tour.age<2300)return;tour.age=0;
+   tour.age+=dt;if(tour.age<(state.gate==='design'?5500:3200))return;tour.age=0;
    if(state.gate==='design'&&!state.appliedDesignFeedback.includes('clarity'))rework('design',['clarity']);
    else if(state.gate==='design'&&!state.appliedDesignFeedback.includes('accessibility'))rework('design',['accessibility']);
    else if(state.gate==='review'&&state.buildRevision===1)rework('rework','Leere Listen verständlich erklären');
@@ -65,6 +66,7 @@ export function attachWorkbench({state,simulation,reset,play,approve,rework,open
   const work=currentOrder().describeWork(state,state.view);
   $('#work-stage').textContent=`STATION ${String(state.runStage+1).padStart(2,'0')} · ${state.phase==='gate'?tr('DEINE ENTSCHEIDUNG','YOUR DECISION'):state.returnRoute?tr('VERBESSERUNGSSCHLEIFE','IMPROVEMENT LOOP'):tr('AKTUELLE ARBEIT','CURRENT WORK')}`;
   for(const key of ['title','action','input','tool','output','decision'])$(`#work-${key}`).textContent=work[key];
+  $('#work-evidence').innerHTML=renderDemoEvidence(state,getLanguage(),{compact:true});
   $('#work-checks').replaceChildren(...work.checks.map(text=>el('li','',text)));
   $('#work-events').replaceChildren(...state.events.slice(-7).reverse().map(event=>el('li','',t(event.label))));
   if(!state.events.length)$('#work-events').append(el('li','',tr('Der Auftrag ist vorbereitet. Starte den Lauf, um die Arbeitsschritte zu sehen.','The order is ready. Start the run to see the work in progress.')));

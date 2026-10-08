@@ -1,0 +1,24 @@
+{
+  "name": "one-software-factory",
+  "productName": "ONE Software Factory",
+  "version": "1.0.0",
+  "description": "Offline desktop edition of the Atlas \u00d7 ONE Software Factory",
+  "private": true,
+  "main": "main.cjs",
+  "author": "Marcel Weissgerber",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "start": "electron .",
+    "icon": "node scripts/create-icon.mjs",
+    "test": "node --test test/protocol.test.cjs",
+    "build:mac": "node scripts/build-mac.mjs",
+    "install:mac": "node scripts/install-mac.mjs"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "44.7.0"
+  }
+}

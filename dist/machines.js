@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { getDemoEvidence } from './demo-evidence.js';
 import { RoundedBoxGeometry } from './vendor/RoundedBoxGeometry.js';
 
 // Local space: the carrier travels +Z at y=1.0, within x=±0.85.
@@ -204,7 +205,7 @@ function build(p) {
   const arm1=robotArm(p,-1.54,-.70,-1),arm2=robotArm(p,1.54,.58,1);
   // Rear engineering monitor and perimeter frame, with fully open belt.
   pillar(p,-1.26,-1.15,2.70);pillar(p,1.26,-1.15,2.70);
-  box(p,2.89,.22,.29,0,2.99,-1.15,C.ivory);badge(p,'NORDA',0,3.00,-.991,C.mint,1.04);
+  box(p,2.89,.22,.29,0,2.99,-1.15,C.ivory);badge(p,'ONE',0,3.00,-.991,C.mint,.84);
   box(p,.15,.55,.15,-2.18,1.14,.57,C.graphite);foot(p,-2.18,.57,.80,.80);
   const screen=monitor(p,-2.15,1.85,.66,1.14,.87,'BUILD');screen.rotation.y=.30;
   const fan=new THREE.Group();fan.position.set(1.29,2.72,-.965);p.add(fan);
@@ -367,22 +368,23 @@ function designPlotter(parent){
   const stylus=new THREE.Group();stylus.name='design-contact-stylus';parent.add(stylus);
   cylinder(stylus,.055,.24,0,.15,0,C.ivory);cylinder(stylus,.026,.05,0,.016,0,C.amber,.012);
   let shownKey='';
-  function redraw(revision){
-    const language=parent.userData.language||'en',key=`${language}:${revision}`;
+  function redraw(revision,feedback=[]){
+    const language=parent.userData.language||'en',key=`${language}:${revision}:${feedback.join(',')}`;
     if(key===shownKey)return;shownKey=key;
     const ctx=imageCanvas.getContext('2d');ctx.fillStyle='#f0f5ef';ctx.fillRect(0,0,384,240);
-    const refined=revision>1;ctx.fillStyle=refined?'#1b3040':'#a4b1af';ctx.fillRect(12,12,360,36);
-    ctx.fillStyle='#ffffff';ctx.font='600 16px Arial';ctx.fillText(language==='en'?'Customer portal':'Kundenportal',25,36);
-    for(let i=0;i<3;i++){
-      const yy=65+i*53;ctx.fillStyle=refined?'#e1ebe4':'#e2e6e0';ctx.fillRect(12,yy,360,42);
-      ctx.fillStyle=refined?'#577dae':'#a6b2ad';ctx.fillRect(25,yy+12,refined?150:90,7);
-      ctx.fillStyle=refined?'#52c6a4':'#efa754';ctx.fillRect(refined?282:230,yy+11,refined?75:125,18);
-    }
+    const evidence=getDemoEvidence({designRevision:revision,appliedDesignFeedback:feedback},language),refined=evidence.accessibilityApplied;
+    ctx.fillStyle='#1b3040';ctx.fillRect(12,12,360,36);
+    ctx.fillStyle='#ffffff';ctx.font='600 14px Arial';ctx.fillText('ATLAS · TC-DEMO-01 / DC-DEMO-01',22,35);
+    evidence.rows.forEach((row,i)=>{
+      const yy=59+i*55;ctx.fillStyle=refined?'#e1ebe4':'#e2e6e0';ctx.fillRect(12,yy,360,49);
+      ctx.fillStyle='#52675f';ctx.font='12px Arial';ctx.fillText(row.reference+' · '+row.title,22,yy+16);
+      ctx.fillStyle=refined?'#245e4a':'#85998e';ctx.font=(refined?'bold 17':'14')+'px Arial';ctx.fillText(row.current,22,yy+37);
+    });
     texture.needsUpdate=true;
     caption.userData.label.text=`VARIANTE ${String(revision).padStart(2,'0')}`;caption.userData.label.fg=revision?C.mint:C.blue;paintLabel(caption,language);
   }
   return process=>{
-    redraw(parent.userData.designRevision||1);
+    redraw(parent.userData.designRevision||1,parent.userData.appliedDesignFeedback||[]);
     const e=process?.engaged||0,w=process?.work||0;
     const x=Math.sin(w*Math.PI*4)*.24,z=THREE.MathUtils.lerp(-.23,.23,w);
     const point=new THREE.Vector3(x,1.415+(process?.lift||0)+.10*(1-(process?.working||0)),z).applyAxisAngle(Y_AXIS,process?.turn||0);
@@ -412,7 +414,7 @@ function buildContactTool(parent){
 
 export function createMachine(index,{reverseGate=false}={}){
   if(!Number.isInteger(index)||index<0||index>5)throw new RangeError('Machine index must be 0–5');
-  const group=new THREE.Group();group.userData.reverseGate=reverseGate;group.userData.language='en';group.name=['brief-intake','atlas-context','norda-design-plan','norda-build','quality-acceptance','atlas-knowledge'][index];
+  const group=new THREE.Group();group.userData.reverseGate=reverseGate;group.userData.language='en';group.name=['brief-intake','atlas-context','one-design-plan','one-build','quality-acceptance','atlas-knowledge'][index];
   const motion=[intake,atlas,plan,build,quality,knowledge][index](group);
   const cradle=liftCradle(group,index);
   const tool=[intakePress,contextConnector,designPlotter,buildContactTool,null,null][index]?.(group);
@@ -423,6 +425,7 @@ export function createMachine(index,{reverseGate=false}={}){
   }
   function animate(time,activity=0,gateOpen=false,process=null){
     group.userData.designRevision=process?.revision||1;
+    group.userData.appliedDesignFeedback=process?.appliedDesignFeedback||[];
     const resolved=resolvedProcess(process);
     // Pose derives only from explicit cycle state. time/activity never run an
     // independent animation that could drift when the application pauses.

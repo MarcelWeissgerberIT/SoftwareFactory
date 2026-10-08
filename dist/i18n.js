@@ -10,6 +10,16 @@ export function setLanguage(value) {
 }
 
 const EN = {
+  "Vergleiche NH-1042 bis NH-1044 mit Atlas TC-DEMO-01 und DC-DEMO-01. ONE gibt dein Feedback an die nächste Design-Iteration weiter.":"Compare NH-1042 to NH-1044 with Atlas TC-DEMO-01 and DC-DEMO-01. ONE carries your feedback into the next design iteration.",
+  "ONE übernimmt die Atlas-Regeln TC-DEMO-01, DC-DEMO-01 und EC-DEMO-01 in die Arbeitspakete für die Coding Agents. Gib diesen Plan frei.":"ONE includes Atlas rules TC-DEMO-01, DC-DEMO-01 and EC-DEMO-01 in the work packages for the coding agents. Approve this plan.",
+  "Vergleiche die drei Service-Aufträge mit TC-DEMO-01 und DC-DEMO-01. Prüfe auch den leeren Zustand für C-309 nach EC-DEMO-01. Ein Befund geht über ONE zurück zum Coding Agent.":"Compare the three service orders with TC-DEMO-01 and DC-DEMO-01. Also check the empty state for C-309 against EC-DEMO-01. A finding returns to the coding agent through ONE.",
+  "Prüfe den aktuellen Stand und noch offene Regeln zu TC-DEMO-01, DC-DEMO-01 und EC-DEMO-01. Bestätige diesen Stand für Atlas. ONE verknüpft Auftrag und Freigabe.":"Review the current result and any open rules for TC-DEMO-01, DC-DEMO-01 and EC-DEMO-01. Confirm this state for Atlas. ONE links the order and approval.",
+  "↻ TC-DEMO-01 · Labels anwenden":"↻ TC-DEMO-01 · Apply labels",
+  "✓ TC-DEMO-01 · Labels anwenden":"✓ TC-DEMO-01 · Labels applied",
+  "↻ DC-DEMO-01 · Design anwenden":"↻ DC-DEMO-01 · Apply design",
+  "✓ DC-DEMO-01 · Design anwenden":"✓ DC-DEMO-01 · Design applied",
+  "↻ EC-DEMO-01 · Leerzustand umsetzen":"↻ EC-DEMO-01 · Implement empty state",
+  "✓ EC-DEMO-01 · Leerzustand umgesetzt":"✓ EC-DEMO-01 · Empty state applied",
   "Die Aufnahme konnte nicht erstellt werden.":"The recording could not be created.",
   "Die Aufnahme enthält keine Videodaten. Starte einen neuen Durchlauf und lasse ihn kurz laufen.":"The recording contains no video data. Start a new run and let it play briefly.",
   "Dieser Browser unterstützt die lokale Canvas-Videoaufnahme nicht.":"This browser does not support local canvas video recording.",

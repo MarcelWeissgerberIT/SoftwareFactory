@@ -1,30 +1,192 @@
 export const stations=[
- {name:'Clarify the brief',short:'Brief',tool:'NORDA + HUMAN',kicker:'THE STARTING POINT',x:12,y:55,progress:.03,
- business:{description:'An idea becomes a clear brief with a goal, ownership and verifiable success criteria.',output:'A confirmed brief that everyone involved understands in the same way.',checks:['Describe the goal and customer benefit','Define ownership and scope','Agree on success criteria']},
- engineering:{description:'Norda connects the initiative, customer context and the right method: bug fix, feature enhancement or new application.',output:'A concrete brief linked to a project, with requirements and acceptance criteria.',checks:['Choose the method and target project','Clarify the repository and constraints','Record outcome and verification criteria']},
- example:'“Our customers should be able to see the progress of their orders themselves.”',status:'Idea captured'},
- {name:'Connect the context',short:'Context',tool:'ATLAS',kicker:'SHARED KNOWLEDGE',x:28,y:70,progress:.25,
- business:{description:'Requirements, decisions and existing evidence from Atlas provide a shared foundation for the work.',output:'Traceable context that brings scattered information together.',checks:['Link relevant requirements','Account for earlier decisions','Make knowledge gaps visible']},
- engineering:{description:'Norda imports Atlas sources with their origin and freshness. Active jobs retain the context snapshot recorded for them.',output:'Versioned working context with traceable sources and relationships.',checks:['Link the Atlas project and identity','Import references and relationships','Record the documentation destination for the run']},
- example:'Requirement: Customers can only see their own orders. The status terms have agreed business definitions.',status:'Requirements and sources connected'},
- {name:'Design & plan',short:'Design & plan',tool:'NORDA + HUMAN',kicker:'THE AGREED FRAMEWORK',x:44,y:29,progress:.43,
- business:{description:'The brief becomes a design and a plan. Review the design, give specific feedback and see the revision. Your approval opens the way to implementation.',output:'Approved work packages with clear outcomes and verification criteria.',checks:['Review the design and give feedback','Review the improved version','Explicitly approve the design and scope']},
- engineering:{description:'Norda connects roles, agents, tools and repository permissions. Starting the run binds execution to the confirmed brief.',output:'An approved workflow with explicit tool and file permissions.',checks:['Choose Codex or Claude for each step','Grant access to specific MCP tools','Check development permissions and network access']},
- gate:{title:'Decision · Plan approval',copy:'Review the design, improve it if needed, then approve the design and plan separately.'},
- example:'Three work packages: the status view, access to each customer’s own orders and verification against the agreed criteria.',status:'Plan ready for approval'},
- {name:'Implement',short:'Implementation',tool:'NORDA · CODEX / CLAUDE',kicker:'THE PRODUCTION LINE',x:60,y:52,progress:.63,
- business:{description:'Approved agents work through the work packages. Progress, questions and results remain traceable within the brief.',output:'A concrete implementation that can be checked against the brief.',checks:['Work within the agreed scope','Bring focused questions back to you','Review interim results when needed']},
- engineering:{description:'Codex or Claude work in the selected repository or worktree. Norda provides the approved tools and records execution.',output:'Code, build results and actual test output linked to the brief.',checks:['Implement the changes in the project','Record builds and tests','Conduct an optional implementation review']},
- gate:{title:'Optional · Implementation review',copy:'An interim result can be reviewed with you before final verification.'},
- example:'The status view is implemented. Appropriate tests cover access controls and status display.',status:'Implementation in progress'},
- {name:'Verify & accept',short:'Verification',tool:'NORDA + HUMAN',kicker:'EVIDENCE OF PROGRESS',x:77,y:16,progress:.8,
- business:{description:'You check the result against the success criteria and actual evidence. Business acceptance is a separate decision.',output:'A verified result with documented business acceptance.',checks:['Compare criteria with evidence','Document your own observations','Make an explicit acceptance decision']},
- engineering:{description:'Verification and acceptance refer to the specific code and file versions. Changed results do not inherit earlier acceptance.',output:'An evidence package with verified criteria, observations and a reference to the result.',checks:['Record the version and result being reviewed','Link test reports and screenshots','Separate technical verification from acceptance']},
- gate:{title:'Decision · Business acceptance',copy:'Test output supports verification. The responsible person grants acceptance.'},
- example:'Verification criteria: Only the customer’s own orders are visible; status matches the source; empty lists are clear.',status:'Evidence and criteria under review'},
- {name:'Preserve knowledge',short:'Knowledge',tool:'ATLAS + NORDA',kicker:'THE FOUNDATION FOR THE NEXT BRIEF',x:90,y:35,progress:.97,
- business:{description:'Confirmed findings flow back into Atlas. They become shared knowledge for the next brief.',output:'Selected requirements, decisions and evidence are confirmed in Atlas.',checks:['Select business changes','Explicitly confirm the update','Read back the saved version']},
- engineering:{description:'Business updates to Atlas remain separate from ongoing run documentation. Norda reads back the written changes to confirm them.',output:'Confirmed Atlas references with sources, rationale and traceable versions.',checks:['Review the specific changes before saving them','Link the requirement, feature or test','Retain the readback result and source']},
- gate:{title:'Decision · Save knowledge',copy:'You select and confirm the business changes. Run logs are already created during the workflow.'},
- example:'Confirmed status terms, access criteria and verification results enrich the shared knowledge base.',status:'Findings ready to save'}
+  {
+    "name": "Clarify the brief",
+    "short": "Brief",
+    "tool": "ONE + HUMAN",
+    "kicker": "THE STARTING POINT",
+    "x": 12,
+    "y": 55,
+    "progress": 0.03,
+    "business": {
+      "description": "ONE holds the brief for three Nordhafen service orders. Atlas knowledge and the terminology, design and empty-state constraints define the target.",
+      "output": "A confirmed brief that everyone involved understands in the same way. · Atlas references: TC-DEMO-01 / DC-DEMO-01 / EC-DEMO-01",
+      "checks": [
+        "TC-DEMO-01: exact service labels",
+        "DC-DEMO-01: full readable status text",
+        "EC-DEMO-01: C-309 has 0 orders"
+      ]
+    },
+    "engineering": {
+      "description": "ONE holds the brief for three Nordhafen service orders. Atlas knowledge and the terminology, design and empty-state constraints define the target. The chosen coding agent receives the agreed workspace context.",
+      "output": "A concrete brief linked to a project, with requirements and acceptance criteria. · Atlas references: TC-DEMO-01 / DC-DEMO-01 / EC-DEMO-01",
+      "checks": [
+        "TC-DEMO-01: exact service labels",
+        "DC-DEMO-01: full readable status text",
+        "EC-DEMO-01: C-309 has 0 orders"
+      ]
+    },
+    "example": "Nordhafen needs NH-1042 Loading gate maintenance, NH-1043 Heating system inspection and NH-1044 Fire door service in one portal.",
+    "status": "Idea captured"
+  },
+  {
+    "name": "Connect the context",
+    "short": "Context",
+    "tool": "ATLAS",
+    "kicker": "SHARED KNOWLEDGE",
+    "x": 28,
+    "y": 70,
+    "progress": 0.25,
+    "business": {
+      "description": "Atlas supplies requirements and explicit rules: TC-DEMO-01 for status labels, DC-DEMO-01 for presentation and EC-DEMO-01 for an empty list. All references here are fictional.",
+      "output": "Traceable context that brings scattered information together. · Atlas references: TC-DEMO-01 / DC-DEMO-01 / EC-DEMO-01",
+      "checks": [
+        "TC-DEMO-01: exact service labels",
+        "DC-DEMO-01: full readable status text",
+        "EC-DEMO-01: C-309 has 0 orders"
+      ]
+    },
+    "engineering": {
+      "description": "Atlas supplies requirements and explicit rules: TC-DEMO-01 for status labels, DC-DEMO-01 for presentation and EC-DEMO-01 for an empty list. All references here are fictional. The chosen coding agent receives the agreed workspace context.",
+      "output": "Working context with linked Atlas sources and traceable relationships. · Atlas references: TC-DEMO-01 / DC-DEMO-01 / EC-DEMO-01",
+      "checks": [
+        "TC-DEMO-01: exact service labels",
+        "DC-DEMO-01: full readable status text",
+        "EC-DEMO-01: C-309 has 0 orders"
+      ]
+    },
+    "example": "TC-DEMO-01: PROC → Service in progress; QA → Report in review; DONE → Service completed. DC-DEMO-01 defines the readable presentation.",
+    "status": "Requirements and sources connected"
+  },
+  {
+    "name": "Design & plan",
+    "short": "Design & plan",
+    "tool": "ONE + HUMAN",
+    "kicker": "THE AGREED FRAMEWORK",
+    "x": 44,
+    "y": 29,
+    "progress": 0.43,
+    "business": {
+      "description": "ONE brings together the task plan and approvals. Compare PROC / QA / DONE with the exact TC-DEMO-01 labels and the DC-DEMO-01 design rules before separate design and plan approval.",
+      "output": "Approved work packages with clear outcomes and verification criteria. · Atlas references: TC-DEMO-01 / DC-DEMO-01 / EC-DEMO-01",
+      "checks": [
+        "TC-DEMO-01: exact service labels",
+        "DC-DEMO-01: full readable status text",
+        "EC-DEMO-01: C-309 has 0 orders"
+      ]
+    },
+    "engineering": {
+      "description": "ONE brings together the task plan and approvals. Compare PROC / QA / DONE with the exact TC-DEMO-01 labels and the DC-DEMO-01 design rules before separate design and plan approval. The chosen coding agent receives the agreed workspace context.",
+      "output": "An agreed task plan as the basis for the selected coding agent. · Atlas references: TC-DEMO-01 / DC-DEMO-01 / EC-DEMO-01",
+      "checks": [
+        "TC-DEMO-01: exact service labels",
+        "DC-DEMO-01: full readable status text",
+        "EC-DEMO-01: C-309 has 0 orders"
+      ]
+    },
+    "gate": {
+      "title": "Decision · Plan approval",
+      "copy": "Review the design, improve it if needed, then approve the design and plan separately."
+    },
+    "example": "The initial raw codes remain visible until the clarity revision is processed. TC-DEMO-01 supplies the before/after target; DC-DEMO-01 supplies the design rules.",
+    "status": "Plan ready for approval"
+  },
+  {
+    "name": "Implement",
+    "short": "Implementation",
+    "tool": "ONE · CODEX / CLAUDE",
+    "kicker": "THE PRODUCTION LINE",
+    "x": 60,
+    "y": 52,
+    "progress": 0.63,
+    "business": {
+      "description": "The selected Codex or Claude agent would use the agreed brief and Atlas constraints in the chosen project. This demo only visualizes the three orders and their revisions.",
+      "output": "An example implementation that can be checked against the brief. · Atlas references: TC-DEMO-01 / DC-DEMO-01 / EC-DEMO-01",
+      "checks": [
+        "TC-DEMO-01: exact service labels",
+        "DC-DEMO-01: full readable status text",
+        "EC-DEMO-01: C-309 has 0 orders"
+      ]
+    },
+    "engineering": {
+      "description": "The selected Codex or Claude agent would use the agreed brief and Atlas constraints in the chosen project. This demo only visualizes the three orders and their revisions. The chosen coding agent receives the agreed workspace context.",
+      "output": "A simulated implementation with intended links to code, builds and verification. · Atlas references: TC-DEMO-01 / DC-DEMO-01 / EC-DEMO-01",
+      "checks": [
+        "TC-DEMO-01: exact service labels",
+        "DC-DEMO-01: full readable status text",
+        "EC-DEMO-01: C-309 has 0 orders"
+      ]
+    },
+    "gate": {
+      "title": "Optional · Implementation review",
+      "copy": "An interim result can be reviewed with you before final verification."
+    },
+    "example": "The selected coding agent uses the same three Nordhafen rows and the agreed TC-DEMO-01/DC-DEMO-01 rules. EC-DEMO-01 covers customer C-309 with 0 orders.",
+    "status": "Implementation in progress"
+  },
+  {
+    "name": "Verify & accept",
+    "short": "Verification",
+    "tool": "ONE + HUMAN",
+    "kicker": "EVIDENCE OF PROGRESS",
+    "x": 77,
+    "y": 16,
+    "progress": 0.8,
+    "business": {
+      "description": "Review the exact labels and presentation against TC-DEMO-01/DC-DEMO-01, and C-309 with 0 orders against EC-DEMO-01. Decide review and acceptance separately.",
+      "output": "A verified result with documented business acceptance. · Atlas references: TC-DEMO-01 / DC-DEMO-01 / EC-DEMO-01",
+      "checks": [
+        "TC-DEMO-01: exact service labels",
+        "DC-DEMO-01: full readable status text",
+        "EC-DEMO-01: C-309 has 0 orders"
+      ]
+    },
+    "engineering": {
+      "description": "Review the exact labels and presentation against TC-DEMO-01/DC-DEMO-01, and C-309 with 0 orders against EC-DEMO-01. Decide review and acceptance separately. The chosen coding agent receives the agreed workspace context.",
+      "output": "An example review overview with criteria, observations and a reference to the result. · Atlas references: TC-DEMO-01 / DC-DEMO-01 / EC-DEMO-01",
+      "checks": [
+        "TC-DEMO-01: exact service labels",
+        "DC-DEMO-01: full readable status text",
+        "EC-DEMO-01: C-309 has 0 orders"
+      ]
+    },
+    "gate": {
+      "title": "Decision · Business acceptance",
+      "copy": "Test output supports verification. The responsible person grants acceptance."
+    },
+    "example": "Compare NH-1042–NH-1044 with TC-DEMO-01 and DC-DEMO-01. Customer C-309 must see no Nordhafen orders and the EC-DEMO-01 message “No orders yet.”.",
+    "status": "Evidence and criteria under review"
+  },
+  {
+    "name": "Preserve knowledge",
+    "short": "Knowledge",
+    "tool": "ATLAS + ONE",
+    "kicker": "THE FOUNDATION FOR THE NEXT BRIEF",
+    "x": 90,
+    "y": 35,
+    "progress": 0.97,
+    "business": {
+      "description": "ONE prepares the findings for Atlas, preserving which constraint references guided the reviewed result. The simulation does not write or change Atlas data.",
+      "output": "Selected requirements, decisions and evidence are confirmed in Atlas. · Atlas references: TC-DEMO-01 / DC-DEMO-01 / EC-DEMO-01",
+      "checks": [
+        "TC-DEMO-01: exact service labels",
+        "DC-DEMO-01: full readable status text",
+        "EC-DEMO-01: C-309 has 0 orders"
+      ]
+    },
+    "engineering": {
+      "description": "ONE prepares the findings for Atlas, preserving which constraint references guided the reviewed result. The simulation does not write or change Atlas data. The chosen coding agent receives the agreed workspace context.",
+      "output": "A confirmed demo proposal for Atlas with a source, rationale and link to the result. · Atlas references: TC-DEMO-01 / DC-DEMO-01 / EC-DEMO-01",
+      "checks": [
+        "TC-DEMO-01: exact service labels",
+        "DC-DEMO-01: full readable status text",
+        "EC-DEMO-01: C-309 has 0 orders"
+      ]
+    },
+    "gate": {
+      "title": "Decision · Save knowledge",
+      "copy": "You select and confirm the business changes. The workspace history remains separate from this knowledge transfer."
+    },
+    "example": "The handover retains the reviewed revision and the fictional Atlas references TC-DEMO-01, DC-DEMO-01 and EC-DEMO-01.",
+    "status": "Findings ready to save"
+  }
 ];

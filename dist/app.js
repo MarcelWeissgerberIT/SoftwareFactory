@@ -4,6 +4,7 @@ import { getLanguage, setLanguage, t } from './i18n.js';
 import { captureStaticTranslations } from './static-i18n.js';
 import { createFactory } from './scene.js';
 import { createSimulation } from './engine.js';
+import { renderDemoEvidence } from './demo-evidence.js';
 import { attachWorkbench } from './workbench.js';
 
 const applyStaticLanguage = captureStaticTranslations();
@@ -16,16 +17,16 @@ const state = simulation.state;
 Object.assign(state, {selected:-1, view:'business', follow:false, language:getLanguage()});
 let factory = null,workbench=null;
 const labels = ['Auftrag','Atlas-Kontext','Design & Plan','Umsetzung','Prüfung','Wissen'];
-const badges = ['BRIEFING','ATLAS','NORDA · DESIGN','NORDA · BUILD','QA + MENSCH','ATLAS'];
+const badges = ['BRIEFING','ATLAS','ONE · DESIGN','ONE · BUILD','QA + MENSCH','ATLAS'];
 const artifactNames = ['Briefing','Kontext','Entwurf','Anwendung','Nachweise','Wissen'];
 const gateNames = {design:'Design-Review',plan:'Planfreigabe',review:'Fachliche Prüfung',acceptance:'Fachliche Abnahme',knowledge:'Atlas-Übernahme'};
 const gateButton = {design:'Design freigeben →',plan:'Plan in der Demo freigeben',review:'Prüfung in der Demo bestätigen',acceptance:'Abnahme in der Demo erteilen',knowledge:'Wissen in der Demo übernehmen'};
 const gateCopy = {
- design:'Prüfe den Entwurf. Dein Feedback schickt dieses Werkstück zurück in die Gestaltung.',
- plan:'Design bestätigt. Jetzt die drei Arbeitspakete freigeben: Statusansicht, Kundenzugriff und passende Prüfungen.',
- review:'Prüfe Statusansicht, Kundenzugriff und leere Listen. Ein Befund führt zurück zur Umsetzung und danach erneut durch die Prüfung.',
+ design:'Vergleiche NH-1042 bis NH-1044 mit Atlas TC-DEMO-01 und DC-DEMO-01. ONE gibt dein Feedback an die nächste Design-Iteration weiter.',
+ plan:'ONE übernimmt die Atlas-Regeln TC-DEMO-01, DC-DEMO-01 und EC-DEMO-01 in die Arbeitspakete für die Coding Agents. Gib diesen Plan frei.',
+ review:'Vergleiche die drei Service-Aufträge mit TC-DEMO-01 und DC-DEMO-01. Prüfe auch den leeren Zustand für C-309 nach EC-DEMO-01. Ein Befund geht über ONE zurück zum Coding Agent.',
  acceptance:'Die fachliche Prüfung ist bestätigt. Die Abnahme ist deine separate Entscheidung für diesen Ergebnisstand.',
- knowledge:'Zur Übernahme ausgewählt: Statusbegriffe, Zugriffskriterien und Prüfergebnisse. Bestätige diese Auswahl für den simulierten Atlas-Rückfluss.'
+ knowledge:'Prüfe den aktuellen Stand und noch offene Regeln zu TC-DEMO-01, DC-DEMO-01 und EC-DEMO-01. Bestätige diesen Stand für Atlas. ONE verknüpft Auftrag und Freigabe.'
 };
 const operations = ['Briefing aufnehmen','Atlas-Quellen verbinden','Entwurf gestalten','Anwendung zusammensetzen','Ergebnis prüfen','Wissen zuordnen'];
 function snapshot(){return {...simulation.snapshot(),station:state.selected<0?null:state.selected+1,stationName:state.selected<0?t('Gesamte Factory'):stations[state.selected].name,perspective:state.view,runStation:state.runStage+1,pendingDemoGate:state.gate,approvedDemoGates:[...state.approved],demoReviewConfirmed:state.reviewed,cameraFollowsOrder:state.follow,simulationOnly:true,...workbench?.snapshot()}}
@@ -50,13 +51,9 @@ function requestRework(kind,feedback){simulation.rework(kind,feedback);followMot
 function followOrder(){state.follow=!state.follow;factory?.setFollow(state.follow);render();return snapshot()}
 function element(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=t(text);return node}
 function portalPreview(compact=false){
- const feedback=state.appliedDesignFeedback||[],clarity=feedback.includes('clarity'),accessible=feedback.includes('accessibility');
- const container=element('div','portal-preview'+(compact?' compact':'')+(accessible?' accessible':''));
- const top=element('div','portal-top');top.append(element('span','','◎ Kundenportal'),element('span','',`Design v${state.designRevision}`));
- const body=element('div','portal-body');body.append(element('strong','','Meine Aufträge'));
- (clarity?['In Bearbeitung','In Prüfung','Abgeschlossen']:['PROC','QA','DONE']).forEach((label,i)=>{const row=element('div');row.append(element('span','',`Auftrag 0${i+1}`),element('b',i===2?'done':'',label));body.append(row)});
- if(state.buildRevision>1)body.append(element('p','empty-state-example','✓ Leere Liste: „Noch keine Aufträge vorhanden.“'));
- container.append(top,body);return container;
+ const container=element('div','demo-evidence-host');
+ container.innerHTML=renderDemoEvidence(state,getLanguage(),{compact});
+ return container;
 }
 function action(text,fn,secondary=false){const button=element('button',secondary?'feedback-button':'',text);button.onclick=fn;return button}
 function renderPanel(){
@@ -72,14 +69,15 @@ function renderPanel(){
  const gate=$('#gate-box');gate.replaceChildren();
  if(waiting){
   gate.append(element('strong','',state.gate==='design'?`Entwurf v${state.designRevision} · Deine Entscheidung`:gateNames[state.gate]));
-  if(state.gate==='design')gate.append(portalPreview(true));
+  if(['design','plan','review','acceptance','knowledge'].includes(state.gate))gate.append(portalPreview(true));
   gate.append(element('p','',gateCopy[state.gate]));
+  const decisions=element('div','gate-actions');
   if(state.gate==='design'){
-   const feedback=[['clarity','↻ Status verständlicher machen'],['accessibility','↻ Kontrast & Lesbarkeit verbessern']];
-   feedback.forEach(([code,title])=>{const done=state.appliedDesignFeedback.includes(code);const button=action(done?'✓ '+title.slice(2):title,()=>requestRework('design',[code]),true);button.disabled=done;gate.append(button)});
+   const feedback=[['clarity','↻ TC-DEMO-01 · Labels anwenden'],['accessibility','↻ DC-DEMO-01 · Design anwenden']];
+   feedback.forEach(([code,title])=>{const done=state.appliedDesignFeedback.includes(code);const button=action(done?'✓ '+title.slice(2):title,()=>requestRework('design',[code]),true);button.disabled=done;decisions.append(button)});
   }
-  if(['review','acceptance'].includes(state.gate)){const fixed=state.buildRevision>1;const button=action(fixed?'✓ Leere Listen verbessert':'↻ Leere Listen nachbessern',()=>requestRework('rework','Leere Listen verständlich erklären'),true);button.disabled=fixed;gate.append(button)}
-  gate.append(action(gateButton[state.gate],()=>completeGate(state.gate)));
+  if(['review','acceptance'].includes(state.gate)){const fixed=state.buildRevision>1;const button=action(fixed?'✓ EC-DEMO-01 · Leerzustand umgesetzt':'↻ EC-DEMO-01 · Leerzustand umsetzen',()=>requestRework('rework','Leere Listen verständlich erklären'),true);button.disabled=fixed;decisions.append(button)}
+  decisions.append(action(gateButton[state.gate],()=>completeGate(state.gate)));gate.append(decisions);
  }else if(s.gate)gate.append(element('strong','',s.gate.title),element('p','',s.gate.copy));
  $('#panel-artifact').textContent=t(`Kundenportal · Design v${state.designRevision} · Build v${state.buildRevision}`);
 }

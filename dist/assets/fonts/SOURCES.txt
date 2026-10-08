@@ -1,0 +1,31 @@
+Bundled Google Fonts
+====================
+
+Downloaded 2026-10-08 from the official Google Fonts CSS API and font CDN.
+The font files are unmodified WOFF2 subsets. Both families are licensed
+under SIL Open Font License 1.1; the full licenses are bundled alongside.
+
+DM Sans: normal, variable weight 100–1000, Latin and Latin Extended.
+Manrope: normal, variable weight 200–800, Latin and Latin Extended.
+German characters (ÄÖÜäöüß) are included in the Latin subset.
+
+CSS source:
+https://fonts.googleapis.com/css2?family=DM+Sans:wght@100..1000&family=Manrope:wght@200..800&display=swap
+
+Official family sources:
+https://github.com/google/fonts/tree/main/ofl/dmsans
+https://github.com/google/fonts/tree/main/ofl/manrope
+
+Downloaded files:
+dm-sans-latin-variable.woff2
+  https://fonts.gstatic.com/s/dmsans/v17/rP2Yp2ywxg089UriI5-g4vlH9VoD8Cmcqbu0-K4.woff2
+dm-sans-latin-ext-variable.woff2
+  https://fonts.gstatic.com/s/dmsans/v17/rP2Yp2ywxg089UriI5-g4vlH9VoD8Cmcqbu6-K6h9Q.woff2
+manrope-latin-variable.woff2
+  https://fonts.gstatic.com/s/manrope/v20/xn7gYHE41ni1AdIRggexSg.woff2
+manrope-latin-ext-variable.woff2
+  https://fonts.gstatic.com/s/manrope/v20/xn7gYHE41ni1AdIRggmxSuXd.woff2
+DM-Sans-OFL.txt
+  https://raw.githubusercontent.com/google/fonts/main/ofl/dmsans/OFL.txt
+Manrope-OFL.txt
+  https://raw.githubusercontent.com/google/fonts/main/ofl/manrope/OFL.txt
