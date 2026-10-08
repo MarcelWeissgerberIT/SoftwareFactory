@@ -28,4 +28,4 @@ for(const folder of bundles){
   execFileSync('/usr/bin/codesign',['--verify','--deep','--strict',bundle],{stdio:'inherit'});
   console.log(`Built: ${bundle}`);
 }
-if(args.has('--install'))execFileSync(process.execPath,[path.join(desktop,'scripts','install-mac.mjs')],{stdio:'inherit'});
+if(args.has('--install'))execFileSync(process.execPath,[path.join(desktop,'scripts','install-mac.mjs'),...(args.has('--replace')?['--replace']:[])],{stdio:'inherit'});

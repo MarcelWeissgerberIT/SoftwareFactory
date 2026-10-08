@@ -73,10 +73,10 @@ function renderPanel(){
   gate.append(element('p','',gateCopy[state.gate]));
   const decisions=element('div','gate-actions');
   if(state.gate==='design'){
-   const feedback=[['clarity','↻ TC-DEMO-01 · Labels anwenden'],['accessibility','↻ DC-DEMO-01 · Design anwenden']];
+   const feedback=[['clarity','↻ Statusbegriffe klären · TC-DEMO-01'],['accessibility','↻ Lesbarkeit verbessern · DC-DEMO-01']];
    feedback.forEach(([code,title])=>{const done=state.appliedDesignFeedback.includes(code);const button=action(done?'✓ '+title.slice(2):title,()=>requestRework('design',[code]),true);button.disabled=done;decisions.append(button)});
   }
-  if(['review','acceptance'].includes(state.gate)){const fixed=state.buildRevision>1;const button=action(fixed?'✓ EC-DEMO-01 · Leerzustand umgesetzt':'↻ EC-DEMO-01 · Leerzustand umsetzen',()=>requestRework('rework','Leere Listen verständlich erklären'),true);button.disabled=fixed;decisions.append(button)}
+  if(['review','acceptance'].includes(state.gate)){const fixed=state.buildRevision>1;const button=action(fixed?'✓ Leerzustand erklärt · EC-DEMO-01':'↻ Leere Liste erklären · EC-DEMO-01',()=>requestRework('rework','Leere Listen verständlich erklären'),true);button.disabled=fixed;decisions.append(button)}
   decisions.append(action(gateButton[state.gate],()=>completeGate(state.gate)));gate.append(decisions);
  }else if(s.gate)gate.append(element('strong','',s.gate.title),element('p','',s.gate.copy));
  $('#panel-artifact').textContent=t(`Kundenportal · Design v${state.designRevision} · Build v${state.buildRevision}`);

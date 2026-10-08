@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v6
       - name: Validate simulation and static assets
         run: |
-          node --test tests/*.test.mjs desktop/test/*.test.cjs
+          node --test tests/*.test.mjs desktop/test/*.test.cjs desktop/test/*.test.mjs
           node scripts/validate.mjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4

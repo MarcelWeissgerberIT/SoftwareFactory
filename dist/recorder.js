@@ -110,7 +110,7 @@ export function createRecorder({sourceCanvas,getFrameInfo=()=>({}),onState,onFin
       const x=1076,w=498;ctx.fillStyle='#fbfcf8';roundedRect(ctx,x,77,w,574,18);ctx.fill();
       ctx.fillStyle='#587568';ctx.font='600 13px Arial';ctx.fillText(german?'DEMO-DATEN · NORDHAFEN SERVICE':'DEMO DATA · NORDHAFEN SERVICE',x+22,106);
       ctx.fillStyle='#1b3040';ctx.font='600 23px Arial';ctx.fillText(german?'Vorher → Aktueller Stand':'Before → Current result',x+22,137);
-      ctx.fillStyle='#587568';ctx.font='14px Arial';ctx.fillText('ATLAS · TC-DEMO-01 · Terminology Constraint',x+22,163);
+      ctx.fillStyle='#587568';ctx.font='14px Arial';ctx.fillText(ellipsis(ctx,'ATLAS · '+evidence.change.sourceId+' · '+evidence.change.title,w-44),x+22,163);
       evidence.rows.forEach((row,i)=>{
         const y=185+i*88;ctx.fillStyle='#edf2ee';roundedRect(ctx,x+16,y,w-32,79,8);ctx.fill();
         ctx.fillStyle='#425c52';ctx.font='14px Arial';ctx.fillText(ellipsis(ctx,row.reference+' · '+row.title,w-66),x+28,y+19);
@@ -135,7 +135,12 @@ export function createRecorder({sourceCanvas,getFrameInfo=()=>({}),onState,onFin
     const title=cleanText(info.title)||cleanText(info.operation)||(german?'Vom Auftrag zur überprüften Anwendung.':'From an order to a reviewed application.');
     ctx.font='600 31px Arial, sans-serif';ctx.fillStyle='#1b3040';ctx.fillText(ellipsis(ctx,title,WIDTH-72),36,750);
     const detail=cleanText(info.detail)||(german?'Atlas liefert den Kontext. ONE verbindet Aufgaben und Coding Agents. Menschen entscheiden über das Ergebnis.':'Atlas provides context. ONE connects tasks and coding agents. People decide on the outcome.');
-    ctx.font='400 24px Arial, sans-serif';ctx.fillStyle='#4b645c';textLines(ctx,detail,WIDTH-72,2).forEach((line,i)=>ctx.fillText(line,36,790+i*31));
+    const change=info.evidence?.change;
+    if(change&&change.kind!=='intro'){
+      ctx.font='600 22px Arial, sans-serif';ctx.fillStyle='#294e40';ctx.fillText(ellipsis(ctx,`${change.pending?(german?'Geplant':'Planned'):(german?'Geändert':'Changed')}: ${change.before} → ${change.after}`,WIDTH-72),36,789);
+      ctx.font='400 20px Arial, sans-serif';ctx.fillStyle='#4b645c';ctx.fillText(ellipsis(ctx,`${german?'Warum':'Why'}: ${change.reason}`,WIDTH-72),36,820);
+      if(change.unchanged){ctx.font='500 16px Arial, sans-serif';ctx.fillText(ellipsis(ctx,change.unchanged,WIDTH-72),36,844);}
+    }else{ctx.font='400 24px Arial, sans-serif';ctx.fillStyle='#4b645c';textLines(ctx,detail,WIDTH-72,2).forEach((line,i)=>ctx.fillText(line,36,790+i*31));}
     ctx.font='600 15px Arial, sans-serif';ctx.fillStyle='#628475';
     const design=Math.max(1,Number(info.designRevision)||1),build=Math.max(1,Number(info.buildRevision)||1);
     ctx.fillText(`DESIGN v${design}    ·    BUILD v${build}`,36,871);

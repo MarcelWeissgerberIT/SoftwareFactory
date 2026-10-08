@@ -22,8 +22,16 @@ npm run install:mac
 `build:mac` copies the current `../dist` into a generated staging directory and
 creates `out/ONE Software Factory-darwin-arm64/ONE Software Factory.app`.
 `install:mac` copies it into `~/Applications`. Installation refuses to replace
-an existing application. Move an older copy to a backup location explicitly
-before installing an update. Development runs with `npm start` against `../dist`.
+an existing application by default. Development runs with `npm start` against
+`../dist`.
+
+For an update, quit the app and run `npm run install:mac -- --replace` after
+building. The installer verifies the source and existing app identities and
+signatures, refuses while the installed app is running, prepares a verified
+copy, and moves the previous bundle into `desktop/out/backups/<timestamp>/`
+before swapping in the new one. It restores that backup if the swap fails.
+The app's user-data directory and language preferences are preserved.
+`npm run build:mac -- --install --replace` combines the build and update.
 
 The generated app is signed ad hoc for local use. It is not Developer ID signed,
 notarized, or submitted to the Mac App Store. A distributed release should use

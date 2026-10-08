@@ -103,3 +103,67 @@ test('HTML is reusable across touchpoints and keeps the target separate from the
   assert.match(clearer,/class="demo-evidence-current">Service in progress/);
   assert.doesNotMatch(clearer,/demo-evidence-current is-accessible/);
 });
+
+test('accessibility-first explains the visual change and explicitly preserves the labels',()=>{
+  const sim=createSimulation();reachDesign(sim);sim.rework('design',['accessibility']);finishDesignReturn(sim);
+  for(const language of ['en','de']){
+    const evidence=getDemoEvidence(sim.state,language),change=evidence.change;
+    assert.equal(change.kind,'accessibility');assert.equal(change.status,'applied');assert.equal(change.pending,false);
+    assert.equal(change.sourceId,'DC-DEMO-01');assert.deepEqual(change.sourceIds,['DC-DEMO-01']);
+    assert.match(change.unchanged,/PROC · QA · DONE/);
+    assert.match(change.reason,/DC-DEMO-01/);
+    assert.doesNotMatch(change.before+change.after,/\d+\s?px/);
+    assert.deepEqual(statuses(evidence),['PROC','QA','DONE']);
+  }
+  const change=getDemoEvidence(sim.state,'en').change;
+  assert.match(change.before,/regular-weight.*muted/);assert.match(change.after,/semibold.*dark green/);
+  assert.match(change.unchanged,/Labels unchanged in this step/);assert.match(change.reason,/without relying on colour/);
+  const html=renderDemoEvidence(sim.state,'en',{compact:true});
+  assert.ok(html.indexOf('demo-evidence-change')<html.indexOf('demo-evidence-column-labels'));
+  assert.match(html,/data-change-kind="accessibility"/);
+  assert.match(html,/This change · DC-DEMO-01[\s\S]*is-applied/);
+});
+
+test('pending feedback takes priority over an earlier applied change until the exact morph',()=>{
+  const sim=createSimulation();reachDesign(sim);sim.rework('design',['accessibility']);finishDesignReturn(sim);
+  sim.rework('design',['clarity']);sim.pause();
+  for(const input of [sim.state,sim.snapshot()]){
+    const change=getDemoEvidence(input,'en').change;
+    assert.equal(change.kind,'clarity');assert.equal(change.status,'pending');assert.equal(change.pending,true);
+    assert.equal(change.sourceId,'TC-DEMO-01');assert.equal(change.before,'PROC · QA · DONE');
+    assert.equal(change.after,'Service in progress · Report in review · Service completed');
+  }
+  sim.start();sim.tick(TIMING.returning+TIMING.processing*TIMING.morphAt-1);
+  assert.equal(getDemoEvidence(sim.state).change.status,'pending');
+  sim.tick(1);const evidence=getDemoEvidence(sim.state,'en');
+  assert.equal(evidence.change.status,'applied');assert.equal(evidence.change.kind,'clarity');assert.equal(evidence.change.pending,false);
+  assert.match(evidence.change.unchanged,/Typography and contrast stay unchanged/);
+  assert.equal(evidence.accessibilityApplied,true);
+});
+
+test('the latest applied feedback is chosen in either user-selected order',()=>{
+  for(const order of [['accessibility','clarity'],['clarity','accessibility']]){
+    const sim=createSimulation();reachDesign(sim);
+    for(const code of order){sim.rework('design',[code]);finishDesignReturn(sim);assert.equal(getDemoEvidence(sim.state).change.kind,code);}
+    const evidence=getDemoEvidence(sim.state,'en');
+    assert.equal(evidence.change.kind,order[1]);assert.equal(evidence.change.status,'applied');
+    assert.deepEqual(statuses(evidence),['Service in progress','Report in review','Service completed']);
+    if(order[1]==='accessibility')assert.match(evidence.change.unchanged,/Service in progress/);
+  }
+});
+
+test('QA rework becomes the current change and reset returns to a planned introduction',()=>{
+  const sim=createSimulation();reachDesign(sim);sim.rework('design',['clarity']);finishDesignReturn(sim);
+  sim.approve('design');sim.approve('plan');sim.tick(1e6);sim.rework('rework');
+  const pending=getDemoEvidence(sim.state,'en');
+  assert.equal(pending.change.kind,'empty-state');assert.equal(pending.change.status,'pending');
+  assert.equal(pending.change.sourceId,'EC-DEMO-01');assert.match(pending.change.before,/C-309.*0 orders.*no message/);
+  assert.equal(pending.change.after,'No orders yet.');assert.match(pending.change.reason,/loading error/);
+  sim.tick(TIMING.returning+TIMING.processing*TIMING.morphAt);
+  assert.equal(getDemoEvidence(sim.state,'en').change.status,'applied');
+  assert.equal(getDemoEvidence(sim.state,'en').change.kind,'empty-state');
+  sim.reset();const initial=getDemoEvidence(sim.state,'en');
+  assert.equal(initial.change.kind,'intro');assert.equal(initial.change.status,'target');assert.equal(initial.change.pending,false);
+  assert.deepEqual(statuses(initial),['PROC','QA','DONE']);assert.equal(initial.emptyState.current,'');
+  assert.match(initial.change.title,/can improve/);
+});

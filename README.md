@@ -9,7 +9,7 @@ An interactive, bilingual 3D explanation of a software workflow for business and
 An example customer-portal order moves through six stations: briefing, Atlas context, design and planning, implementation, quality review and acceptance, and knowledge transfer. Machines clamp, lift, process and release the same carrier. Design feedback sends it through a physical return conveyor; quality findings send it back to implementation. Changed builds require another review and a separate acceptance.
 
 - **EN / DE:** English is the default. Switching language updates the entire experience, including machine labels, decisions, live work, recording overlays and the demo film; the selection is saved locally.
-- **Atlas constraints and before/after:** the same fictional Nordhafen service orders (NH-1042–1044) appear in the design review, dossier, live work, 3D displays and recordings. TC-DEMO-01 defines exact service terminology, DC-DEMO-01 defines readable presentation, and EC-DEMO-01 defines the empty state for customer C-309. Changes appear only when reprocessing applies them.
+- **Atlas constraints and before/after:** the same fictional Nordhafen service orders (NH-1042–1044) appear in the design review, dossier, live work, 3D displays and recordings. TC-DEMO-01 defines exact service terminology, DC-DEMO-01 defines readable presentation, and EC-DEMO-01 defines the empty state for customer C-309. Changes appear only when reprocessing applies them. A prominent change card explains what changed in the current iteration, why the Atlas rule requires it, and which properties stay unchanged; recordings carry the same explanation.
 - **Order file / Auftragsakte:** fictional customer brief, scope, success criteria, knowledge sources, work packages, current result and iteration history.
 - **How it works / So arbeitet es:** current input, responsible tool/role, concrete work step, expected output and activity log. Business and Engineering descriptions follow the actual work location, independently of the camera.
 - **Demo film:** the complete guided example is available in the Recording dialog as a downloadable MP4 in English and German.
@@ -36,7 +36,7 @@ python3 -m http.server 4177 --bind 127.0.0.1 --directory dist
 Open http://127.0.0.1:4177/. WebGL is required for the real-time scene; the original OpenArt concept is the fallback. Video recording needs Canvas captureStream and MediaRecorder support. The page pauses simulation progress while hidden; keep the recording tab active for a continuous demonstration.
 
 ```sh
-node --test tests/*.test.mjs desktop/test/*.test.cjs
+node --test tests/*.test.mjs desktop/test/*.test.cjs desktop/test/*.test.mjs
 node scripts/validate.mjs
 ```
 

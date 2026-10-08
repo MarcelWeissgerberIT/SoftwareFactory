@@ -1,7 +1,7 @@
 {
   "name": "one-software-factory",
   "productName": "ONE Software Factory",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Offline desktop edition of the Atlas \u00d7 ONE Software Factory",
   "private": true,
   "main": "main.cjs",
@@ -13,7 +13,7 @@
   "scripts": {
     "start": "electron .",
     "icon": "node scripts/create-icon.mjs",
-    "test": "node --test test/protocol.test.cjs",
+    "test": "node --test test/*.test.cjs test/*.test.mjs",
     "build:mac": "node scripts/build-mac.mjs",
     "install:mac": "node scripts/install-mac.mjs"
   },
